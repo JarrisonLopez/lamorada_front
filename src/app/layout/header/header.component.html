@@ -1,1 +1,32 @@
-<p>header works!</p>
+<header class="site-header">
+  <nav class="nav">
+    <a routerLink="/home" class="brand">La Morada</a>
+
+    <a routerLink="/product">Productos</a>
+    <a routerLink="/podcast">Podcasts</a>
+    <a routerLink="/post">Posts</a>
+
+    <!-- Solo logueados -->
+    <ng-container *ngIf="isLogged; else guest">
+      <a routerLink="/cart">Carrito</a>
+      <a routerLink="/appointment">Citas</a>
+
+      <!-- Para psicólogo -->
+      <ng-container *ngIf="role === 'psychologist'">
+        <a routerLink="/availability/manage">Gestionar disponibilidad</a>
+        <a routerLink="/post/manage">Gestionar posts</a>
+      </ng-container>
+
+      <span class="spacer"></span>
+      <span class="who">{{ name || role || 'Usuario' }}</span>
+      <button type="button" class="link" (click)="onLogout()">Salir</button>
+    </ng-container>
+
+    <!-- Invitado -->
+    <ng-template #guest>
+      <span class="spacer"></span>
+      <a routerLink="/sign-in">Entrar</a>
+      <a routerLink="/sign-up">Crear cuenta</a>
+    </ng-template>
+  </nav>
+</header>

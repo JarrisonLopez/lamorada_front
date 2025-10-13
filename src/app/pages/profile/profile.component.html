@@ -1,1 +1,7 @@
-<p>profile works!</p>
+<h2>Perfil</h2>
+<form [formGroup]="form" (ngSubmit)="save()" class="form">
+  <input formControlName="name" placeholder="Nombre" />
+  <input formControlName="phone" placeholder="Teléfono" />
+  <button>Guardar</button>
+</form>
+<button (click)="deleteMe()">Eliminar mi cuenta</button>

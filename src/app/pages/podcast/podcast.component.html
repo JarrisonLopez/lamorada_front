@@ -1,1 +1,62 @@
-<p>podcast works!</p>
+<h2>Podcasts</h2>
+
+<!-- Tabs para psicólogo -->
+<nav *ngIf="isPsych()" class="tabs">
+  <button [class.active]="tab()==='list'" (click)="toTab('list')">Listado</button>
+  <button [class.active]="tab()==='create'" (click)="toTab('create')">Nuevo</button>
+</nav>
+
+<p *ngIf="err()" class="err">{{ err() }}</p>
+<p *ngIf="msg()" class="ok">{{ msg() }}</p>
+
+<!-- Listado visible para todos -->
+<section *ngIf="tab()==='list' || !isPsych()">
+  <div *ngIf="loading()">Cargando podcasts…</div>
+
+  <div class="grid" *ngIf="!loading() && podcasts().length">
+    <article class="card" *ngFor="let p of podcasts()">
+      <div class="video" *ngIf="p.youtubeId">
+        <iframe
+          [src]="buildEmbedUrl(p.youtubeId) | safeUrl"
+          title="YouTube player"
+          frameborder="0"
+          allowfullscreen>
+        </iframe>
+      </div>
+
+      <h3 class="title">{{ p.title }}</h3>
+      <p class="desc" *ngIf="p.description">{{ p.description }}</p>
+      <small class="meta" *ngIf="p.createdAt">{{ p.createdAt | date:'short' }}</small>
+      <small class="meta" *ngIf="p.creator_name"> • {{ p.creator_name }}</small>
+
+      <!-- Solo el autor ve Eliminar -->
+      <div class="row" *ngIf="isOwner(p)">
+        <button class="danger" (click)="remove(p)">Eliminar</button>
+      </div>
+    </article>
+  </div>
+
+  <div *ngIf="!loading() && !podcasts().length">No hay podcasts.</div>
+</section>
+
+<!-- Form crear (solo psicólogo) -->
+<section *ngIf="isPsych() && tab()==='create'" class="form-wrap">
+  <h3>Nuevo podcast</h3>
+  <form [formGroup]="form" (ngSubmit)="create()" class="form">
+    <label>Título
+      <input formControlName="title" />
+    </label>
+
+    <label>Descripción
+      <textarea rows="3" formControlName="description"></textarea>
+    </label>
+
+    <label>YouTube (ID o URL)
+      <input formControlName="youtube" />
+    </label>
+
+    <button [disabled]="saving() || form.invalid">
+      {{ saving() ? 'Creando…' : 'Crear' }}
+    </button>
+  </form>
+</section>

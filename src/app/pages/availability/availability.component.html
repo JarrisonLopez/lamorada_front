@@ -1,0 +1,45 @@
+<h2>Disponibilidad</h2>
+
+<div *ngIf="loading">Cargando…</div>
+<p *ngIf="err" class="err">{{ err }}</p>
+<p *ngIf="msg" class="ok">{{ msg }}</p>
+
+<!-- DÍAS -->
+<section class="block">
+  <h3>Días disponibles</h3>
+  <div class="days">
+    <label *ngFor="let d of days">
+      <input
+        type="checkbox"
+        [checked]="(form.value.days || []).includes(d.key)"
+        (change)="toggleDay(d.key, $any($event.target).checked)" />
+      {{ d.label }}
+    </label>
+  </div>
+  <small *ngIf="(form.controls['days'].touched || form.controls['days'].dirty) && form.controls['days'].invalid"
+         class="field-err">Selecciona al menos un día.</small>
+</section>
+
+<!-- SLOTS -->
+<section class="block">
+  <h3>Horarios (intervalos)</h3>
+
+  <div class="slot-row" *ngFor="let g of slotsFA.controls; let i = index; trackBy: trackSlot" [formGroup]="slotGroupAt(i)">
+    <label>Inicio
+      <input type="time" formControlName="start" />
+    </label>
+    <label>Fin
+      <input type="time" formControlName="end" />
+    </label>
+    <button type="button" class="ghost" (click)="removeSlot(i)" [disabled]="slotsFA.length <= 1">Eliminar</button>
+  </div>
+
+  <button type="button" (click)="addSlot()">Añadir intervalo</button>
+</section>
+
+<!-- ACCIONES -->
+<section class="actions">
+  <button type="button" (click)="save()">Guardar</button>
+  <button type="button" class="ghost" (click)="load()">Recargar</button>
+  <button type="button" class="danger" *ngIf="docId" (click)="delete()">Eliminar</button>
+</section>

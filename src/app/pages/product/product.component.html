@@ -1,1 +1,14 @@
-<p>product works!</p>
+<div *ngIf="loading">Cargando productos...</div>
+
+<div class="grid" *ngIf="!loading">
+  <div class="card" *ngFor="let p of products">
+    <img *ngIf="p.cover_url" [src]="p.cover_url" alt="cover" />
+    <h3>{{ p.title }}</h3>
+    <p>{{ p.author }} — {{ p.publish_year }}</p>
+    <strong>{{ p.price | currency:'USD':'symbol' }}</strong>
+
+    <button [disabled]="addingId === p._id" (click)="addToCart(p)">
+      {{ addingId === p._id ? 'Agregando...' : 'Agregar' }}
+    </button>
+  </div>
+</div>

@@ -1,1 +1,19 @@
-<p>sign-in works!</p>
+<h2>Iniciar sesión</h2>
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="form">
+  <label>
+    Email
+    <input type="email" formControlName="email" />
+  </label>
+
+  <label>
+    Contraseña
+    <input type="password" formControlName="password" />
+  </label>
+
+  <button [disabled]="loading || form.invalid">{{ loading ? 'Entrando…' : 'Entrar' }}</button>
+</form>
+
+<p *ngIf="err" class="err">{{ err }}</p>
+
+<p>¿No tienes cuenta? <a routerLink="/sign-up">Regístrate</a></p>

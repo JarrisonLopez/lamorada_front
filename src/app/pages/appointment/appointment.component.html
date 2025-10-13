@@ -1,1 +1,30 @@
-<p>appointment works!</p>
+<section class="box">
+  <h2>Agendar cita</h2>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <label>Fecha
+      <input type="date" formControlName="date" [min]="minDate">
+    </label>
+
+    <label>Hora
+      <!-- El [min] se ajusta dinámicamente: hoy ⇒ próximos 15 min; otro día ⇒ 00:00 -->
+      <input type="time" formControlName="time" step="900" [min]="minTime">
+    </label>
+
+    <label>Psicólogo (opcional)
+      <select formControlName="psychologist_id">
+        <option value="">Cualquiera</option>
+        <option *ngFor="let p of psychologists" [value]="p._id">{{ p.name }}</option>
+      </select>
+    </label>
+
+    <label>Notas (opcional)
+      <textarea formControlName="notes" placeholder="Motivo de la consulta"></textarea>
+    </label>
+
+    <button type="submit" [disabled]="loading">Crear cita</button>
+  </form>
+
+  <p *ngIf="err" style="color:#c00">{{ err }}</p>
+  <p *ngIf="msg" style="color:green">{{ msg }}</p>
+</section>

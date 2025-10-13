@@ -1,1 +1,61 @@
-<p>sign-up works!</p>
+<form [formGroup]="form" (ngSubmit)="submit()" class="form" autocomplete="off">
+  <h2>Crear cuenta</h2>
+
+  <div class="row">
+    <select formControlName="document_type">
+      <option value="" disabled selected>Tipo de documento</option>
+      <option *ngFor="let t of documentTypes" [value]="t.value">{{ t.label }}</option>
+    </select>
+    <input placeholder="Número de documento" formControlName="_id" />
+  </div>
+  <p *ngIf="f['_id'].touched && f['_id'].invalid" style="color:red">
+    ID inválido (usa 5–30 caracteres: letras, números, “- _ .”).
+  </p>
+  <p *ngIf="f['document_type'].touched && f['document_type'].invalid" style="color:red">
+    Selecciona el tipo de documento.
+  </p>
+
+  <div class="row">
+    <input placeholder="Nombre(s)" formControlName="name" />
+  </div>
+  <div class="row">
+    <input placeholder="Primer apellido" formControlName="last_name1" />
+    <input placeholder="Segundo apellido" formControlName="last_name2" />
+  </div>
+  <p *ngIf="(f['name'].touched && f['name'].invalid) ||
+            (f['last_name1'].touched && f['last_name1'].invalid) ||
+            (f['last_name2'].touched && f['last_name2'].invalid)"
+     style="color:red">Nombre y apellidos son obligatorios.</p>
+
+  <div class="row">
+    <input type="number" placeholder="Edad" formControlName="age" />
+    <input placeholder="Teléfono" formControlName="phone" />
+  </div>
+  <p *ngIf="f['age'].touched && f['age'].invalid" style="color:red">Edad inválida (1–120).</p>
+  <p *ngIf="f['phone'].touched && f['phone'].invalid" style="color:red">Teléfono inválido (7–15 dígitos).</p>
+
+  <input placeholder="Email" type="email" formControlName="email" />
+  <p *ngIf="f['email'].touched && f['email'].invalid" style="color:red">Correo inválido.</p>
+
+  <input
+    placeholder="Contraseña (mín. 8, símbolo de @$!%*?&)"
+    type="password"
+    formControlName="password"
+    autocomplete="new-password"
+  />
+  <p *ngIf="passwordErrors" style="color:red">{{ passwordErrors }}</p>
+
+  <input
+    placeholder="Confirmar contraseña"
+    type="password"
+    formControlName="confirmPassword"
+    autocomplete="new-password"
+  />
+  <p *ngIf="form.hasError('passwordsMismatch') && (confirm.touched || confirm.dirty)"
+     style="color:red">Las contraseñas no coinciden</p>
+
+  <button [disabled]="loading || form.invalid">Registrarme</button>
+
+  <p *ngIf="msg" style="color:green">{{ msg }}</p>
+  <p *ngIf="error" style="color:red">{{ error }}</p>
+</form>

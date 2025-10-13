@@ -1,0 +1,77 @@
+<h2>Artículos (gestión)</h2>
+
+<p *ngIf="err" class="err">{{ err }}</p>
+<p *ngIf="msg" class="ok">{{ msg }}</p>
+
+<section class="new">
+  <h3>Nuevo artículo</h3>
+  <form [formGroup]="form" (ngSubmit)="create()" class="form">
+    <input formControlName="title" placeholder="Título" />
+    <textarea formControlName="content" rows="5" placeholder="Contenido del artículo (máx. 5000)"></textarea>
+
+    <label class="check">
+      <input type="checkbox" formControlName="active" />
+      Público (activo)
+    </label>
+
+    <div class="row">
+      <button [disabled]="saving || form.invalid">{{ saving ? 'Creando…' : 'Crear' }}</button>
+      <button type="button" class="ghost" (click)="form.reset({ title:'', content:'', active:true })">Limpiar</button>
+    </div>
+  </form>
+</section>
+
+<h3>Mis artículos</h3>
+<div *ngIf="loading">Cargando lista…</div>
+
+<div *ngFor="let p of posts" class="card">
+  <div class="card-header">
+    <strong>{{ p.title }}</strong>
+    <small *ngIf="p.created_at">{{ p.created_at | date:'short' }}</small>
+  </div>
+  <p class="content">{{ p.content }}</p>
+
+  <!-- Badges -->
+  <div class="badges">
+    <span class="badge" [class.on]="p.active" [class.off]="!p.active">
+      {{ p.active ? 'Activo' : 'Inactivo' }}
+    </span>
+
+    <!-- Debug opcional -->
+    <ng-container *ngIf="debug">
+      <span class="m">owner: {{ ownerId(p) }}</span>
+      <span class="m">me: {{ meId }}</span>
+    </ng-container>
+  </div>
+
+  <!-- Acciones SOLO si soy el autor -->
+  <div class="actions" *ngIf="isOwner(p)">
+    <button type="button" (click)="toggleActive(p)">
+      {{ p.active ? 'Desactivar' : 'Activar' }}
+    </button>
+    <button type="button" class="danger" (click)="remove(p)">Eliminar</button>
+  </div>
+
+  <!-- Si NO soy autor, muestro aviso -->
+  <div class="actions" *ngIf="!isOwner(p)">
+    <small class="muted">No puedes modificar este artículo.</small>
+  </div>
+</div>
+
+<!-- Estilos rápidos -->
+<style>
+  .err{color:#b00020;margin:.5rem 0}.ok{color:#0a7a2f;margin:.5rem 0}
+  .form{display:grid;gap:.5rem;max-width:720px}.check{display:flex;gap:.5rem;align-items:center}
+  .row{display:flex;gap:.5rem}
+  button{padding:.5rem .75rem;border:1px solid #0b66c3;background:#0b66c3;color:#fff;border-radius:8px;cursor:pointer}
+  .ghost{background:#f5f5f5;border-color:#ccc;color:#333}
+  .danger{background:#b00020;border-color:#b00020}
+  .card{border:1px solid #eee;border-radius:10px;padding:.75rem;margin:.5rem 0;background:#f9f9f9}
+  .card-header{display:flex;justify-content:space-between;gap:1rem}
+  .content{white-space:pre-wrap;margin:.25rem 0 .5rem}
+  .badges{display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem}
+  .badge{padding:.15rem .5rem;border-radius:999px;border:1px solid #ddd;font-size:.8rem}
+  .badge.on{background:#e7f5ee;color:#0a7a2f;border-color:#bfe7cf}
+  .badge.off{background:#feecec;color:#b00020;border-color:#f5c8c8}
+  .muted{color:#666}
+</style>

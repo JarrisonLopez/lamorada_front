@@ -1,0 +1,18 @@
+.err { color:#c00; margin:6px 0; }
+.ok  { color:#0a7a2f; margin:6px 0; }
+
+.block { margin:12px 0; }
+.days { display:flex; flex-wrap:wrap; gap:10px; }
+.days label { display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border:1px solid #eee; border-radius:8px; }
+
+.slot-row { display:flex; gap:10px; align-items:end; margin-bottom:8px; }
+.slot-row label { display:flex; flex-direction:column; gap:4px; }
+.slot-row input[type="time"] { padding:6px 8px; border:1px solid #ddd; border-radius:8px; min-width: 140px; }
+
+.actions { display:flex; gap:8px; }
+button { padding:8px 12px; border-radius:8px; border:1px solid #0b66c3; background:#0b66c3; color:#fff; cursor:pointer; }
+button.ghost { background:#f8f8f8; color:#333; border-color:#ddd; }
+button.danger { background:#c71610; border-color:#c71610; }
+button[disabled] { opacity:.6; cursor:default; }
+
+.field-err { color:#c00; }

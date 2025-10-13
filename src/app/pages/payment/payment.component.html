@@ -1,1 +1,21 @@
-<p>payment works!</p>
+<h2>Pagos</h2>
+<div *ngIf="!payments().length">No tienes pagos.</div>
+
+<table *ngIf="payments().length">
+  <thead>
+    <tr>
+      <th>Método</th>
+      <th>Monto</th>
+      <th>Fecha</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let p of payments()">
+      <td>{{ p.method }}</td>
+      <td>${{ p.amount }}</td>
+      <td>{{ p.createdAt | date:'short' }}</td>
+      <td><button (click)="remove(p._id)">Eliminar</button></td>
+    </tr>
+  </tbody>
+</table>

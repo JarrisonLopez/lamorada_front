@@ -1,1 +1,8 @@
-<p>checkout works!</p>
+<h2>Checkout</h2>
+<div *ngFor="let it of cart().items">
+  {{ it.title }} × {{ it.quantity }} — ${{ it.price * it.quantity }}
+</div>
+<p>Total: <strong>${{ total }}</strong></p>
+<button (click)="payNow()">Pagar ahora</button>
+<p *ngIf="msg()" style="color:green">{{ msg() }}</p>
+<p *ngIf="err()" style="color:red">{{ err() }}</p>
