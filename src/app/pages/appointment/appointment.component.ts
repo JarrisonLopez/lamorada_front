@@ -1,9 +1,11 @@
-import { Component, Inject, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { Component, Inject, PLATFORM_ID, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { AppointmentService } from '../../services/appointment.service';
 import { UserService } from '../../services/user.service';
-import { firstValueFrom } from 'rxjs';
+
+type Role = 'patient' | 'psychologist' | null;
 
 @Component({
   selector: 'app-appointment',
@@ -12,189 +14,131 @@ import { firstValueFrom } from 'rxjs';
   templateUrl: './appointment.component.html',
   styleUrls: ['./appointment.component.css'],
 })
-export class AppointmentComponent implements OnInit {
+export class AppointmentComponent {
   private fb = inject(FormBuilder);
+  private appt = inject(AppointmentService);
+  private users = inject(UserService);
+
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
 
   form: FormGroup = this.fb.group({
-    date: ['', Validators.required],
-    time: ['', Validators.required],
-    psychologist_id: [''],
+    date: ['', Validators.required],       // yyyy-MM-dd
+    time: ['', Validators.required],       // HH:mm
+    psychologist_id: ['', Validators.required],
+    patient_id: [''],                      // requerido solo si role=psychologist
     notes: [''],
   });
-
-  minDate = ''; // yyyy-MM-dd (hoy)
-  minTime = '00:00'; // HH:mm (se ajusta a próximos 15 min si es hoy)
 
   loading = false;
   msg: string | null = null;
   err: string | null = null;
 
-  psychologists: any[] = [];
+  minDate = '';
+  minTime = '00:00';
+  role: Role = null;
 
-  constructor(
-    private appt: AppointmentService,
-    private users: UserService,
-    @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  psychologists: any[] = [];
+  patients: any[] = [];
+
+  get isBrowser() { return isPlatformBrowser(this.platformId); }
 
   ngOnInit(): void {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
+    // fecha mínima = hoy
+    const now = new Date();
+    const yyyy = now.getFullYear(), mm = String(now.getMonth()+1).padStart(2,'0'), dd = String(now.getDate()).padStart(2,'0');
     this.minDate = `${yyyy}-${mm}-${dd}`;
-
-    // Seteamos fecha por defecto = hoy y calculamos minTime
     this.form.get('date')!.setValue(this.minDate);
     this.updateMinTime();
 
-    // recalcular límites al cambiar fecha/hora
     this.form.get('date')!.valueChanges.subscribe(() => this.updateMinTime());
-    this.form.get('time')!.valueChanges.subscribe(() => this.clearMessages());
 
-    this.loadPsychologists();
-  }
+    // rol del jwt
+    this.role = this.readRoleFromToken();
 
-  private clearMessages() {
-    this.msg = null;
-    this.err = null;
-  }
-
-  private async loadPsychologists() {
-    try {
-      const r = await firstValueFrom(this.users.getPsychologists());
-      this.psychologists = Array.isArray(r?.users) ? r.users : Array.isArray(r) ? r : [];
-    } catch {
-      this.psychologists = [];
+    // si soy psicólogo, patient_id es requerido en el form
+    if (this.role === 'psychologist') {
+      this.form.get('patient_id')!.addValidators([Validators.required]);
     }
+
+    this.loadLists();
   }
 
-  role(): 'patient' | 'psychologist' | null {
-    if (!isPlatformBrowser(this.platformId)) return null;
+  private readRoleFromToken(): Role {
+    if (!this.isBrowser) return null;
     try {
-      const t = localStorage.getItem('token');
-      if (!t) return null;
-      const payload = JSON.parse(atob(t.split('.')[1]));
-      return (payload?.role || payload?.user_role || payload?.user?.role || null) as any;
-    } catch {
-      return null;
-    }
+      const t = localStorage.getItem('token'); if (!t) return null;
+      const p: any = JSON.parse(atob(t.split('.')[1]));
+      return (p?.role || p?.user?.role || null) as Role;
+    } catch { return null; }
   }
 
-  /** Redondea la hora actual a los próximos 15 minutos (00, 15, 30, 45) */
-  private nextQuarter(now = new Date()): string {
-    const n = new Date(now);
-    n.setSeconds(0, 0);
+  private nextQuarter(d: Date): string {
+    const n = new Date(d.getTime());
+    n.setSeconds(0,0);
     const mins = n.getMinutes();
-    const jump = [0, 15, 30, 45].find((m) => m > mins);
-    if (jump !== undefined) {
-      n.setMinutes(jump);
-    } else {
-      n.setHours(n.getHours() + 1);
-      n.setMinutes(0);
-    }
-    return `${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`;
+    const step = [0,15,30,45].find(x => x > mins);
+    if (step !== undefined) n.setMinutes(step); else { n.setHours(n.getHours()+1); n.setMinutes(0); }
+    return `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
   }
-
-  /** Si la fecha seleccionada es hoy, minTime = próximos 15 min; si no, 00:00 */
   private updateMinTime() {
-    const date: string = this.form.get('date')!.value;
-    const todayStr = this.minDate;
-    if (date === todayStr) {
-      this.minTime = this.nextQuarter(new Date());
-      // Si el time actual quedó por debajo, súbelo al mínimo
-      const current = this.form.get('time')!.value as string;
-      if (current && !this.isFuture(date, current)) {
-        this.form.get('time')!.setValue(this.minTime);
-      }
-    } else {
-      this.minTime = '00:00';
-    }
+    const date = this.form.get('date')!.value as string;
+    if (date === this.minDate) this.minTime = this.nextQuarter(new Date());
+    else this.minTime = '00:00';
+    const cur = this.form.get('time')!.value as string;
+    if (cur && !this.isFuture(date, cur)) this.form.get('time')!.setValue(this.minTime);
   }
-
-  /** Valida que fecha+hora estén en el futuro */
-  private isFuture(dateStr: string, timeStr: string): boolean {
-    if (!dateStr || !timeStr) return false;
-    // Construimos fecha local segura
-    const [h, m] = timeStr.split(':').map(Number);
-    const [Y, M, D] = dateStr.split('-').map(Number);
-    const dt = new Date(Y, (M ?? 1) - 1, D ?? 1, h ?? 0, m ?? 0, 0, 0);
+  private isFuture(date: string, time: string): boolean {
+    if (!date || !time) return false;
+    const [Y,M,D] = date.split('-').map(Number);
+    const [h,m]   = time.split(':').map(Number);
+    const dt = new Date(Y, (M??1)-1, D??1, h??0, m??0, 0, 0);
     return dt.getTime() > Date.now();
   }
 
+  private async loadLists() {
+    try {
+      const pys = await firstValueFrom(this.users.getPsychologists());
+      this.psychologists = Array.isArray(pys?.users) ? pys.users : (Array.isArray(pys) ? pys : []);
+    } catch { this.psychologists = []; }
+
+    if (this.role === 'psychologist') {
+      try {
+        const pa = await firstValueFrom(this.users.getPatients());
+        this.patients = Array.isArray(pa?.users) ? pa.users : (Array.isArray(pa) ? pa : []);
+      } catch { this.patients = []; }
+    }
+  }
+
+  private toStartISO(date: string, time: string): string {
+    // construimos 'YYYY-MM-DDTHH:mm:00' (local) → ISO
+    const [Y,M,D] = date.split('-').map(Number);
+    const [h,m]   = time.split(':').map(Number);
+    const local = new Date(Y, (M??1)-1, D??1, h??0, m??0, 0, 0);
+    return local.toISOString();
+  }
+
   async submit() {
-    this.msg = null;
-    this.err = null;
+    this.msg = null; this.err = null;
+    if (this.form.invalid) { this.err = 'Completa los campos obligatorios.'; return; }
+    const date = this.form.value.date as string;
+    const time = this.form.value.time as string;
+    if (!this.isFuture(date, time)) { this.err = 'Selecciona fecha y hora futuras.'; return; }
 
-    if (this.form.invalid) {
-      this.err = 'Completa los campos requeridos.';
-      return;
-    }
-
-    const date: string = this.form.value.date;
-    const time: string = this.form.value.time;
-
-    // Validación final: no permitir horas pasadas
-    if (!this.isFuture(date, time)) {
-      if (date === this.minDate) {
-        this.err = `Para hoy, selecciona una hora posterior a ${this.minTime}.`;
-      } else {
-        this.err = 'Selecciona una fecha y hora futuras.';
-      }
-      return;
-    }
+    const body: any = {
+      psychologist_id: this.form.value.psychologist_id,
+      start: this.toStartISO(date, time),
+    };
+    if (this.role === 'psychologist') body.patient_id = this.form.value.patient_id;
 
     this.loading = true;
     try {
-      const payload = {
-        date,
-        time,
-        notes: this.form.value.notes || '',
-        psychologist_id: this.form.value.psychologist_id || undefined,
-      };
-      const resp = await firstValueFrom(this.appt.createAppointment(payload));
-      this.msg = resp?.message || 'Cita creada.';
-      this.form.get('notes')?.reset('');
+      await firstValueFrom(this.appt.create(body));
+      this.msg = 'Cita creada.';
     } catch (e: any) {
-      this.err = e?.error?.message || 'Error al crear la cita';
+      // El backend nos devuelve "DAY NOT AVAILABLE", "TIME NOT AVAILABLE IN SLOT", etc.
+      this.err = e?.error?.message || 'Error interno del servidor';
     } finally {
       this.loading = false;
     }
-  }
-
-  // ---------- Helpers UI (chips y resumen) ----------
-  psychName(): string {
-    const id = this.form?.value?.psychologist_id || '';
-    const p = (this.psychologists || []).find((x: any) => x?._id === id);
-    return p?.name || 'Cualquiera';
-  }
-
-  previewDate(): string {
-    const d = this.form?.value?.date;
-    if (!d) return '';
-    const [Y, M, D] = d.split('-');
-    return `${D}/${M}/${Y}`;
-  }
-
-  previewTime(): string {
-    const t = this.form?.value?.time;
-    if (!t) return '';
-    return t;
-  }
-
-  pickToday(): void {
-    this.form.get('date')?.setValue(this.minDate);
-    this.updateMinTime();
-  }
-
-  pickTomorrow(): void {
-    const n = new Date();
-    n.setDate(n.getDate() + 1);
-    const yyyy = n.getFullYear();
-    const mm = String(n.getMonth() + 1).padStart(2, '0');
-    const dd = String(n.getDate()).padStart(2, '0');
-    const tomorrow = `${yyyy}-${mm}-${dd}`;
-    this.form.get('date')?.setValue(tomorrow);
-    this.updateMinTime();
   }
 }

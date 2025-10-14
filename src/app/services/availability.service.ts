@@ -1,32 +1,50 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { isPlatformBrowser } from '@angular/common';
+import { map, Observable } from 'rxjs';
 
-@Injectable({
-  providedIn: 'root',
-})
+export type AvSlot = { start: string; end: string };
+export type AvailabilityDoc = { _id?: string; days: string[]; slots: AvSlot[] };
+
+@Injectable({ providedIn: 'root' })
 export class AvailabilityService {
   private baseUrl = 'https://la-morada-back-production.up.railway.app/availability';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
+
+  private isBrowser() { return isPlatformBrowser(this.platformId); }
 
   private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('token');
+    const token = this.isBrowser() ? localStorage.getItem('token') : null;
     return new HttpHeaders({
       'Content-Type': 'application/json',
       Authorization: token ? `Bearer ${token}` : '',
     });
   }
 
-  upsertAvailability(data: any): Observable<any> {
-    return this.http.post(this.baseUrl, data, { headers: this.getAuthHeaders() });
+  /** Crea/actualiza disponibilidad del psicólogo logueado */
+  upsertAvailability(doc: AvailabilityDoc): Observable<AvailabilityDoc> {
+    return this.http.post<AvailabilityDoc>(this.baseUrl, doc, { headers: this.getAuthHeaders() });
   }
 
-  getAvailability(): Observable<any> {
-    return this.http.get(this.baseUrl, { headers: this.getAuthHeaders() });
+  /** Devuelve la disponibilidad del psicólogo logueado (o null si no hay) */
+  getAvailability(): Observable<AvailabilityDoc | null> {
+    return this.http.get<any>(this.baseUrl, { headers: this.getAuthHeaders() }).pipe(
+      map((r) => {
+        // el back suele responder { success, availability } o directamente el doc
+        if (r?.availability === null) return null;
+        if (r?.availability) return r.availability as AvailabilityDoc;
+        return (r as AvailabilityDoc) ?? null;
+      })
+    );
   }
 
-  deleteAvailability(id: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/${id}`, { headers: this.getAuthHeaders() });
+  deleteAvailability(id: string) {
+    return this.http.delete(this.baseUrl + '/' + encodeURIComponent(id), {
+      headers: this.getAuthHeaders(),
+    });
   }
 }

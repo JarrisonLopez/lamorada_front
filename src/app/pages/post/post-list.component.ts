@@ -1,16 +1,7 @@
 import { Component, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, DatePipe, isPlatformBrowser } from '@angular/common';
 import { finalize } from 'rxjs/operators';
-import { PostService } from '../../services/post.service';
-
-type Post = {
-  _id: string;
-  psychologist_id: string | { name?: string; last_name1?: string; last_name2?: string };
-  title: string;
-  content: string;
-  active: boolean;
-  created_at?: string | Date;
-};
+import { PostService, Post } from '../../services/post.service';
 
 @Component({
   standalone: true,
@@ -34,23 +25,21 @@ export class PostListComponent {
   fetch() {
     this.loading = true;
     this.err = null;
-    this.svc
-      .getPosts()
+    this.svc.getPosts(false)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
-        next: (res: any[]) => {
-          const all = (res || []) as Post[];
+        next: (res: Post[]) => {
+          const all = res || [];
           this.posts = all.filter((p) => p.active !== false);
         },
         error: (e: any) => {
-          console.error('GET /post failed:', e);
           this.err = e?.error?.message || e?.message || 'No se pudieron cargar los artículos.';
         },
       });
   }
 
   authorName(p: Post): string {
-    const a = p?.psychologist_id as any;
+    const a: any = p?.psychologist_id;
     if (a && typeof a === 'object') {
       return [a.name, a.last_name1, a.last_name2].filter(Boolean).join(' ');
     }

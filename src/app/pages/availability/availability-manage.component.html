@@ -1,93 +1,47 @@
 <div class="page">
-  <!-- Header -->
-  <header class="av-hero card">
+  <header class="hero card">
     <div>
-      <h2>Gestionar disponibilidad</h2>
-      <div class="muted">Selecciona días y define tus intervalos de atención.</div>
-    </div>
-    <div class="toolbar">
-      <small class="muted">{{ slotsFA.length }} intervalo(s)</small>
+      <h2>Disponibilidad</h2>
+      <div class="muted">Selecciona días (en semana) y define el/los intervalos.</div>
     </div>
   </header>
 
-  <!-- Card principal -->
   <section class="card">
-    <div class="card-body">
+    <div class="body">
       <div *ngIf="loading">Cargando…</div>
-      <div *ngIf="err" class="msg err">{{ err }}</div>
-      <div *ngIf="msg" class="msg ok">{{ msg }}</div>
+      <p *ngIf="err" class="msg err">{{ err }}</p>
+      <p *ngIf="msg" class="msg ok">{{ msg }}</p>
 
-      <form [formGroup]="form" class="form" *ngIf="!loading">
+      <form [formGroup]="form" *ngIf="!loading">
         <!-- DÍAS -->
-        <section class="block">
-          <h3>Días disponibles</h3>
-          <div class="days">
-            <label *ngFor="let d of days">
-              <input
-                type="checkbox"
-                [checked]="(form.value.days || []).includes(d.key)"
-                (change)="toggleDay(d.key, $any($event.target).checked)"
-              />
-              {{ d.label }}
-            </label>
-          </div>
-          <small
-            *ngIf="
-              (form.controls['days'].touched || form.controls['days'].dirty) &&
-              form.controls['days'].invalid
-            "
-            class="field-err"
-            >Selecciona al menos un día.</small
-          >
-        </section>
+        <h3>Días disponibles</h3>
+        <div class="chips">
+          <label *ngFor="let d of days">
+            <input
+              type="checkbox"
+              [checked]="(form.value.days || []).includes(d.key)"
+              (change)="toggleDay(d.key, $any($event.target).checked)"
+            />
+            {{ d.label }}
+          </label>
+        </div>
 
         <!-- SLOTS -->
-        <section class="block">
-          <h3>Horarios (intervalos)</h3>
-
-          <div class="slot-list">
-            <div
-              class="slot-row"
-              *ngFor="let g of slotsFA.controls; let i = index; trackBy: trackSlot"
-              [formGroup]="slotGroupAt(i)"
-            >
-              <label
-                >Inicio
-                <input type="time" formControlName="start" />
-              </label>
-              <label
-                >Fin
-                <input type="time" formControlName="end" />
-              </label>
-
-              <div class="slot-actions">
-                <button
-                  type="button"
-                  class="btn btn-ghost btn-sm"
-                  (click)="removeSlot(i)"
-                  [disabled]="slotsFA.length <= 1"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </div>
+        <h3 style="margin-top:12px">Horarios (intervalos)</h3>
+        <div class="slots">
+          <div *ngFor="let g of slotsFA.controls; let i = index; trackBy: trackIdx" [formGroup]="slotAt(i)" class="slot">
+            <label>Inicio <input type="time" formControlName="start" /></label>
+            <label>Fin <input type="time" formControlName="end" /></label>
+            <button type="button" class="btn ghost" (click)="removeSlot(i)" [disabled]="slotsFA.length<=1">Eliminar</button>
           </div>
+        </div>
 
-          <div class="actions" style="justify-content: flex-start; margin-top: 10px">
-            <button type="button" class="btn btn-ghost" (click)="addSlot()">
-              Añadir intervalo
-            </button>
-          </div>
-        </section>
-
-        <!-- ACCIONES -->
-        <section class="actions">
-          <button type="button" class="btn btn-primary" (click)="save()">Guardar</button>
-          <button type="button" class="btn btn-ghost" (click)="load()">Recargar</button>
-          <button type="button" class="btn btn-danger" *ngIf="docId" (click)="delete()">
-            Eliminar
-          </button>
-        </section>
+        <div class="actions">
+          <button type="button" class="btn ghost" (click)="addSlot()">Añadir intervalo</button>
+          <div class="spacer"></div>
+          <button type="button" class="btn danger" *ngIf="docId" (click)="delete()">Eliminar</button>
+          <button type="button" class="btn primary" (click)="save()">Guardar</button>
+        </div>
       </form>
     </div>
   </section>

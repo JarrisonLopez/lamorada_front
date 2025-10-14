@@ -1,11 +1,12 @@
-// src/app/core/interceptors/error.interceptor.ts
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn, HttpRequest, HttpHandlerFn } from '@angular/common/http';
 import { catchError, throwError } from 'rxjs';
 
-export const errorInterceptor: HttpInterceptorFn = (_req, next) =>
-  next(_req).pipe(
-    catchError((err: HttpErrorResponse) => {
-      // No limpiar localStorage aquí.
-      return throwError(() => err);
-    })
-  );
+export const errorInterceptor: HttpInterceptorFn = (
+  req: HttpRequest<any>,
+  next: HttpHandlerFn
+) => next(req).pipe(
+  catchError((err: HttpErrorResponse) => {
+    // Aquí podrías emitir un snackbar/toast global
+    return throwError(() => err);
+  })
+);
