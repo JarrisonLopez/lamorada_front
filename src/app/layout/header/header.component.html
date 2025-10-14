@@ -17,11 +17,13 @@
     <a routerLink="/product" routerLinkActive="active">Productos</a>
     <a routerLink="/podcast" routerLinkActive="active">Podcasts</a>
     <a routerLink="/post" routerLinkActive="active">Posts</a>
+    <a routerLink="/profile" routerLinkActive="active">Psicólogos</a>
 
     <!-- Solo logueados -->
     <ng-container *ngIf="isLogged; else guest">
       <a routerLink="/cart" routerLinkActive="active">Carrito</a>
       <a routerLink="/appointment" routerLinkActive="active">Citas</a>
+      <a routerLink="/profile/edit" routerLinkActive="active">Editar perfil</a>
 
       <!-- Para psicólogo -->
       <ng-container *ngIf="role === 'psychologist'">

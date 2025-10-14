@@ -5,7 +5,7 @@ import { Observable, tap } from 'rxjs';
 
 // rutas de auth que NO deben llevar Authorization
 const AUTH_SKIP = [/\/auth\/login\b/i, /\/user\/login\b/i, /\/auth\/sign-?in\b/i, /\/user\/sign-?in\b/i, /\/sign-?in\b/i];
-function shouldSkipAuth(url: string) { return AUTH_SKIP.some((re) => re.test(url)); }
+const shouldSkipAuth = (url: string) => AUTH_SKIP.some(re => re.test(url));
 
 export const authInterceptor: HttpInterceptorFn = (
   req: HttpRequest<any>,
@@ -19,13 +19,12 @@ export const authInterceptor: HttpInterceptorFn = (
       const token = localStorage.getItem('token');
       if (token) {
         cloned = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
-        // DEBUG: muestra que sí se adjuntó el header (solo en dev)
-        if (!('production' in window)) {
+        if (typeof window !== 'undefined' && !('production' in window)) {
           // eslint-disable-next-line no-console
           console.debug('[authInterceptor] Authorization añadido a', req.url);
         }
       }
-    } catch { /* noop */ }
+    } catch {}
   }
 
   return next(cloned).pipe(
@@ -34,7 +33,7 @@ export const authInterceptor: HttpInterceptorFn = (
         try {
           const newToken = event?.headers?.get?.('x-new-token');
           if (newToken) localStorage.setItem('token', newToken);
-        } catch { /* noop */ }
+        } catch {}
       }
     })
   );

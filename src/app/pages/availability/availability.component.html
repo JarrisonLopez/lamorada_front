@@ -1,31 +1,36 @@
-<div class="page">
-  <header class="av-hero card">
-    <div>
-      <h2>Disponibilidad del profesional</h2>
-      <div class="muted">Días y horarios publicados.</div>
+<section class="av-wrap">
+  <h2>Mi disponibilidad</h2>
+
+  <ng-container *ngIf="loading; else content">
+    <p>Cargando…</p>
+  </ng-container>
+
+  <ng-template #content>
+    <!-- Si hay doc útil, la mostramos -->
+    <div *ngIf="hasData(); else empty" class="card">
+      <h3>Días</h3>
+      <p class="days">{{ daysJoined() }}</p>
+
+      <h3>Intervalos</h3>
+      <ul class="slots">
+        <li *ngFor="let s of doc!.slots">{{ s.start }} – {{ s.end }}</li>
+      </ul>
+
+      <a routerLink="/availability/manage" class="btn">Gestionar disponibilidad</a>
     </div>
-  </header>
 
-  <section class="card">
-    <div class="card-body">
-      <div *ngIf="loading">Cargando…</div>
-      <p *ngIf="err" class="msg err">{{ err }}</p>
-
-      <ng-container *ngIf="!loading && !err">
-        <div *ngIf="!data">Sin disponibilidad publicada.</div>
-
-        <div *ngIf="data">
-          <h3>Días</h3>
-          <ul>
-            <li *ngFor="let d of data.days">{{ labelES(d) }}</li>
-          </ul>
-
-          <h3>Intervalos</h3>
-          <ul>
-            <li *ngFor="let s of data.slots">{{ s.start }}–{{ s.end }}</li>
-          </ul>
-        </div>
-      </ng-container>
-    </div>
-  </section>
-</div>
+    <!-- Mensajes según rol/estado -->
+    <ng-template #empty>
+      <div class="card">
+        <ng-container *ngIf="role === 'psychologist'; else patientMsg">
+          <p>Aún no has publicado tu disponibilidad.</p>
+          <a routerLink="/availability/manage" class="btn">Publicar ahora</a>
+        </ng-container>
+        <ng-template #patientMsg>
+          <p>Esta vista muestra la disponibilidad del profesional autenticado.</p>
+          <p>Si eres paciente, coordina con tu psicólogo o solicita un horario disponible.</p>
+        </ng-template>
+      </div>
+    </ng-template>
+  </ng-template>
+</section>

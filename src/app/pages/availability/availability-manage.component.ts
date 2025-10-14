@@ -1,157 +1,142 @@
-import { Component, Inject, PLATFORM_ID, inject } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
+import { Component, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, NgFor, NgIf, isPlatformBrowser } from '@angular/common';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AvailabilityService } from '../../services/availability.service';
+import { AvSlot, AvailabilityDoc } from '../../models/availability.model';
+import { WEEKDAYS_EN, EN2ES, ES2EN, EN2ES_PLAIN } from '../../shared/day-utils';
 
-type Slot = { start: string; end: string };
-type AvailabilityDoc = { _id?: string; days: string[]; slots: Slot[] };
+type AvForm = FormGroup<{
+  days: FormControl<string[]>;
+  start: FormControl<string>;
+  end:   FormControl<string>;
+}>;
 
-const DAYS = [
-  { key: 'monday',    label: 'Lunes' },
-  { key: 'tuesday',   label: 'Martes' },
-  { key: 'wednesday', label: 'Miércoles' },
-  { key: 'thursday',  label: 'Jueves' },
-  { key: 'friday',    label: 'Viernes' },
-  { key: 'saturday',  label: 'Sábado' },
-  { key: 'sunday',    label: 'Domingo' },
-];
+const ALLOWED_EN = WEEKDAYS_EN; // ['monday'..'sunday']
 
 @Component({
-  selector: 'app-availability-manage',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  selector: 'app-availability-manage',
+  imports: [CommonModule, ReactiveFormsModule, NgIf, NgFor],
   templateUrl: './availability-manage.component.html',
   styleUrls: ['./availability-manage.component.css'],
 })
 export class AvailabilityManageComponent {
-  private fb = inject(FormBuilder);
-  private svc = inject(AvailabilityService);
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
-
-  loading = false;
-  err: string | null = null;
-  msg: string | null = null;
-
-  days = DAYS;
-  docId: string | null = null;
-
-  form: FormGroup = this.fb.group({
-    days: this.fb.control<string[]>([], { validators: [Validators.required] }),
-    slots: this.fb.array<FormGroup>([]),
-  });
-
-  get slotsFA(): FormArray<FormGroup> { return this.form.get('slots') as FormArray<FormGroup>; }
-  slotAt(i: number): FormGroup { return this.slotsFA.at(i) as FormGroup; }
-  trackIdx = (i: number) => i;
-
-  get isBrowser() { return isPlatformBrowser(this.platformId); }
-
-  ngOnInit(): void {
-    this.load();
-  }
-
-  // UI helpers
-  toggleDay(key: string, checked: boolean) {
-    const current = [...(this.form.value.days ?? [])];
-    const next = checked ? Array.from(new Set([...current, key])) : current.filter(k => k !== key);
-    this.form.get('days')!.setValue(next);
-  }
-
-  addSlot(initial: Slot = { start: '09:00', end: '17:00' }) {
-    const g = this.fb.group({
-      start: this.fb.control<string>(initial.start, { nonNullable: true, validators: [Validators.required] }),
-      end:   this.fb.control<string>(initial.end,   { nonNullable: true, validators: [Validators.required] }),
+  constructor(
+    private fb: FormBuilder,
+    private avSrv: AvailabilityService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    this.form = this.fb.group({
+      days: this.fb.control<string[]>([], { nonNullable: true }),
+      start: this.fb.control<string>('', { nonNullable: true, validators: [Validators.pattern(/^\d{2}:\d{2}$/)] }),
+      end:   this.fb.control<string>('', { nonNullable: true, validators: [Validators.pattern(/^\d{2}:\d{2}$/)] }),
     });
-    this.slotsFA.push(g);
   }
-  removeSlot(i: number) { if (this.slotsFA.length > 1) this.slotsFA.removeAt(i); }
 
-  private clearSlots() { while (this.slotsFA.length) this.slotsFA.removeAt(0); }
+  weekdays = WEEKDAYS_EN;
+  form!: AvForm;
 
-  async load() {
-    if (!this.isBrowser) return;
-    this.loading = true; this.err = null; this.msg = null;
-    try {
-      const data = await firstValueFrom(this.svc.getAvailability());
-      this.clearSlots();
+  slots: AvSlot[] = [];
+  currentId: string | null = null;
+  loading = true;
+  saving  = false;
 
-      if (data) {
-        this.docId = (data as any)?._id ?? null;
-        this.form.patchValue({ days: data.days ?? [] });
-        (data.slots ?? []).forEach(s => this.addSlot(s));
-        if (this.slotsFA.length === 0) this.addSlot();
-      } else {
-        // Prefill simple: lunes a viernes, 09–17
-        this.docId = null;
-        this.form.patchValue({ days: ['monday','tuesday','wednesday','thursday','friday'] });
-        this.addSlot({ start: '09:00', end: '17:00' });
-      }
-    } catch (e: any) {
-      this.err = e?.error?.message || 'Error al cargar disponibilidad';
-    } finally {
-      this.loading = false;
+  ngOnInit() {
+    if (!isPlatformBrowser(this.platformId)) { this.loading = false; return; }
+    this.avSrv.getAvailability().subscribe({
+      next: doc => {
+        if (doc?._id) this.currentId = doc._id;
+        // Normaliza cualquier cosa a EN para los chips
+        const daysNormEN = (doc?.days ?? [])
+          .map(v => String(v ?? ''))
+          .map(s => s.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim())
+          .map(s => ES2EN[s] ?? s);
+        const unique = Array.from(new Set(daysNormEN));
+        const ordered = ALLOWED_EN.filter(d => unique.includes(d));
+        this.form.patchValue({ days: ordered });
+        this.slots = (doc?.slots ?? []).map(s => ({ start: s.start, end: s.end }));
+      },
+      complete: () => this.loading = false
+    });
+  }
+
+  toggleDay(en: string) {
+    const cur = new Set(this.form.controls.days.value);
+    cur.has(en) ? cur.delete(en) : cur.add(en);
+    const next = ALLOWED_EN.filter(d => cur.has(d)); // orden Monday..Sunday
+    this.form.controls.days.setValue(next);
+  }
+  dayLabel(en: string) { return EN2ES[en] ?? en; }
+
+  addSlot() {
+    const s = this.form.controls.start.value;
+    const e = this.form.controls.end.value;
+    if (!/^\d{2}:\d{2}$/.test(s) || !/^\d{2}:\d{2}$/.test(e)) return;
+    if (e <= s) return;
+    this.slots = [...this.slots, { start: s, end: e }];
+    this.form.controls.start.setValue('');
+    this.form.controls.end.setValue('');
+  }
+  removeSlot(i: number) { this.slots = this.slots.filter((_, idx) => idx !== i); }
+
+  private validate(daysEsPlain: string[], slots: AvSlot[]): string | null {
+    if (!daysEsPlain.length) return 'Selecciona al menos un día.';
+    if (!slots.length) return 'Agrega al menos un intervalo.';
+
+    const allowedEsPlain = ['lunes','martes','miercoles','jueves','viernes','sabado','domingo'];
+    for (const d of daysEsPlain) {
+      if (!allowedEsPlain.includes(d)) return `Día inválido: "${d}"`;
     }
-  }
-
-  private validateSlots(): string | null {
-    const slots: Slot[] = (this.form.value.slots ?? []) as Slot[];
-    if (!slots?.length) return 'Debes definir al menos 1 intervalo.';
+    const hhmm = /^\d{2}:\d{2}$/;
     for (const s of slots) {
-      if (!s?.start || !s?.end) return 'Todos los intervalos deben tener inicio y fin.';
-      if (s.end <= s.start) return 'Cada intervalo debe terminar después de su inicio.';
+      if (!hhmm.test(s.start) || !hhmm.test(s.end)) return 'Formato de hora inválido.';
+      if (s.end <= s.start) return 'Cada intervalo debe tener fin mayor que inicio.';
     }
     return null;
   }
 
-  async save() {
-    this.msg = null; this.err = null;
+  save() {
+    // 1) Obtenemos la selección interna (EN) y la convertimos a ES plano (sin tildes) para el backend
+    const daysEN = this.form.controls.days.value || [];
+    const daysESplain = daysEN.map(d => EN2ES_PLAIN[d] ?? d);
 
-    if (this.form.invalid) { this.err = 'Selecciona al menos un día.'; return; }
-    const slotErr = this.validateSlots(); if (slotErr) { this.err = slotErr; return; }
+    const slots = this.slots.map(s => ({ start: s.start, end: s.end }));
+    const error = this.validate(daysESplain, slots);
+    if (error) { alert(error); return; }
 
-    const selectedDays: string[] = (this.form.value.days ?? []).map((d: string) => String(d).toLowerCase());
-    const slots: Slot[] = (this.form.value.slots ?? []) as Slot[];
+    const doc: AvailabilityDoc = { days: daysESplain, slots };
+    // eslint-disable-next-line no-console
+    console.log('[POST /availability] (ES sin tildes) =>', JSON.stringify(doc));
 
-    // *** Requisito del backend: misma cantidad de slots que de days ***
-    let payloadSlots: Slot[];
-    if (slots.length === selectedDays.length) {
-      payloadSlots = slots;
-    } else if (slots.length === 1 && selectedDays.length > 1) {
-      payloadSlots = Array.from({ length: selectedDays.length }, () => ({ ...slots[0] }));
-    } else {
-      // Si hay N>1 slots y no coincide, tomamos el primero repetido (simple y válido)
-      payloadSlots = Array.from({ length: selectedDays.length }, () => ({ ...slots[0] }));
-    }
-
-    const payload: AvailabilityDoc = {
-      days: selectedDays,     // inglés minúscula
-      slots: payloadSlots,    // tantas entradas como días
-    };
-
-    this.loading = true;
-    try {
-      await firstValueFrom(this.svc.upsertAvailability(payload));
-      this.msg = 'Disponibilidad guardada.';
-      await this.load();
-    } catch (e: any) {
-      this.err = e?.error?.message || 'No se pudo guardar la disponibilidad';
-    } finally {
-      this.loading = false;
-    }
+    this.saving = true;
+    this.avSrv.upsertAvailability(doc).subscribe({
+      next: (r: any) => {
+        const av = r?.availability ?? r;
+        this.currentId = av?._id ?? this.currentId;
+        alert('Disponibilidad guardada ✅');
+      },
+      error: (err) => {
+        const msg = (err?.error?.message || err?.message || '').toString();
+        alert(msg || 'No se pudo guardar.');
+        // eslint-disable-next-line no-console
+        console.error('[availability save] status:', err?.status, 'url:', err?.url, 'body:', err?.error);
+      },
+      complete: () => this.saving = false
+    });
   }
 
-  async delete() {
-    if (!this.docId) return;
-    this.loading = true; this.err = null; this.msg = null;
-    try {
-      await firstValueFrom(this.svc.deleteAvailability(this.docId));
-      this.msg = 'Disponibilidad eliminada.';
-      await this.load();
-    } catch (e: any) {
-      this.err = e?.error?.message || 'No se pudo eliminar la disponibilidad';
-    } finally {
-      this.loading = false;
-    }
+  deleteAll() {
+    if (!this.currentId) { alert('No hay disponibilidad para eliminar'); return; }
+    if (!confirm('¿Eliminar tu disponibilidad publicada?')) return;
+
+    this.avSrv.deleteAvailability(this.currentId).subscribe({
+      next: _ => {
+        this.currentId = null;
+        this.form.controls.days.setValue([]);
+        this.slots = [];
+        alert('Disponibilidad eliminada.');
+      },
+      error: _ => alert('No se pudo eliminar.')
+    });
   }
 }

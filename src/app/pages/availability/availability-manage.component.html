@@ -1,48 +1,39 @@
-<div class="page">
-  <header class="hero card">
-    <div>
-      <h2>Disponibilidad</h2>
-      <div class="muted">Selecciona días (en semana) y define el/los intervalos.</div>
-    </div>
-  </header>
+<section class="box" *ngIf="!loading; else load">
+  <h2>Gestionar disponibilidad</h2>
 
-  <section class="card">
-    <div class="body">
-      <div *ngIf="loading">Cargando…</div>
-      <p *ngIf="err" class="msg err">{{ err }}</p>
-      <p *ngIf="msg" class="msg ok">{{ msg }}</p>
+  <div class="days">
+    <button type="button"
+            *ngFor="let d of weekdays"
+            (click)="toggleDay(d)"
+            [class.active]="form.controls.days.value.includes(d)">
+      {{ dayLabel(d) | titlecase }}
+    </button>
+  </div>
 
-      <form [formGroup]="form" *ngIf="!loading">
-        <!-- DÍAS -->
-        <h3>Días disponibles</h3>
-        <div class="chips">
-          <label *ngFor="let d of days">
-            <input
-              type="checkbox"
-              [checked]="(form.value.days || []).includes(d.key)"
-              (change)="toggleDay(d.key, $any($event.target).checked)"
-            />
-            {{ d.label }}
-          </label>
-        </div>
+  <div class="row">
+    <label>Desde
+      <input type="time" [formControl]="form.controls.start">
+    </label>
+    <label>Hasta
+      <input type="time" [formControl]="form.controls.end">
+    </label>
+    <button type="button" (click)="addSlot()">Añadir intervalo</button>
+  </div>
 
-        <!-- SLOTS -->
-        <h3 style="margin-top:12px">Horarios (intervalos)</h3>
-        <div class="slots">
-          <div *ngFor="let g of slotsFA.controls; let i = index; trackBy: trackIdx" [formGroup]="slotAt(i)" class="slot">
-            <label>Inicio <input type="time" formControlName="start" /></label>
-            <label>Fin <input type="time" formControlName="end" /></label>
-            <button type="button" class="btn ghost" (click)="removeSlot(i)" [disabled]="slotsFA.length<=1">Eliminar</button>
-          </div>
-        </div>
+  <h3>Intervalos</h3>
+  <ul class="slots">
+    <li *ngFor="let s of slots; let i = index">
+      {{ s.start }} – {{ s.end }}
+      <button type="button" (click)="removeSlot(i)">x</button>
+    </li>
+  </ul>
 
-        <div class="actions">
-          <button type="button" class="btn ghost" (click)="addSlot()">Añadir intervalo</button>
-          <div class="spacer"></div>
-          <button type="button" class="btn danger" *ngIf="docId" (click)="delete()">Eliminar</button>
-          <button type="button" class="btn primary" (click)="save()">Guardar</button>
-        </div>
-      </form>
-    </div>
-  </section>
-</div>
+  <div class="actions">
+    <button type="button" (click)="save()" [disabled]="saving">Guardar</button>
+    <button type="button" class="danger" (click)="deleteAll()">Eliminar disponibilidad</button>
+  </div>
+</section>
+
+<ng-template #load>
+  <div class="box">Cargando…</div>
+</ng-template>

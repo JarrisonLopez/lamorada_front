@@ -1,7 +1,49 @@
-<h2>Perfil</h2>
-<form [formGroup]="form" (ngSubmit)="save()" class="form">
-  <input formControlName="name" placeholder="Nombre" />
-  <input formControlName="phone" placeholder="Teléfono" />
-  <button>Guardar</button>
-</form>
-<button (click)="deleteMe()">Eliminar mi cuenta</button>
+<section class="wrap">
+  <h2>Perfiles de psicólogos</h2>
+
+  <div class="toolbar">
+    <input
+      type="search"
+      placeholder="Buscar por nombre, email o especialidad…"
+      [formControl]="filterCtrl" />
+    <button type="button" class="link" (click)="fetch()">Recargar</button>
+  </div>
+
+  <ng-container *ngIf="loading; else content">
+    <div class="card muted">Cargando…</div>
+  </ng-container>
+
+  <ng-template #content>
+    <div *ngIf="errorMsg" class="card error">
+      {{ errorMsg }}
+      <div class="mt-6">
+        <button type="button" (click)="fetch()">Reintentar</button>
+      </div>
+    </div>
+
+    <div *ngIf="!errorMsg && !view.length" class="card muted">
+      No hay psicólogos para mostrar.
+    </div>
+
+    <div *ngIf="!errorMsg && view.length" class="grid">
+      <article class="psy" *ngFor="let p of view">
+        <div class="avatar">{{ initials(p) }}</div>
+        <div class="info">
+          <h3>{{ p.fullName }}</h3>
+          <div class="row">
+            <span class="label">Email:</span>
+            <a class="value" [href]="'mailto:' + p.email">{{ p.email || '—' }}</a>
+          </div>
+          <div class="row">
+            <span class="label">Especialidad:</span>
+            <span class="value">{{ p.specialty || '—' }}</span>
+          </div>
+          <div class="row">
+            <span class="label">Teléfono:</span>
+            <span class="value">{{ p.phone || '—' }}</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </ng-template>
+</section>
