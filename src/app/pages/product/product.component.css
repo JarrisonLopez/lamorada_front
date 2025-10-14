@@ -1,4 +1,227 @@
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 16px; }
-.card { border: 1px solid #eee; border-radius: 8px; padding: 12px; }
-.card img { width: 100%; height: 150px; object-fit: cover; border-radius: 6px; }
-button { margin-top: 8px; width: 100%; }
+/* ===== La Morada · Productos ===== */
+:root {
+  --lm-ink: #2a173d;
+  --lm-muted: #6d5b8a;
+  --lm-bg-1: #f7f3ff;
+  --lm-bg-2: #efe8ff;
+  --lm-panel: #ffffff;
+  --lm-border: #e6dcff;
+  --lm-accent: #8f6bff;
+  --lm-accent-2: #c084fc;
+  --lm-radius: 16px;
+  --lm-shadow: 0 18px 60px rgba(79, 29, 135, 0.12);
+}
+
+.page {
+  max-width: 1120px;
+  margin: 18px auto;
+  padding: 0 16px;
+  color: var(--lm-ink);
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
+}
+
+/* Toolbar búsqueda */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  position: sticky;
+  top: 64px;
+  z-index: 1;
+  backdrop-filter: blur(6px);
+}
+.search {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid var(--lm-border);
+  border-radius: 14px;
+  padding: 8px 10px;
+  box-shadow: 0 8px 20px rgba(143, 107, 255, 0.12);
+}
+.search .ico {
+  color: #9b87b8;
+  font-size: 14px;
+}
+.search input {
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--lm-ink);
+}
+.btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--lm-border);
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(180deg, #b096ff, #9b7bff 60%, #8f6bff);
+  box-shadow: 0 10px 26px rgba(143, 107, 255, 0.35);
+  transition: filter 0.15s ease, transform 0.06s ease, box-shadow 0.2s ease;
+}
+.btn:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 14px 34px rgba(143, 107, 255, 0.45);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Grid de productos */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+/* Card */
+.card {
+  display: grid;
+  gap: 10px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), #fff);
+  border: 1px solid var(--lm-border);
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: 0 10px 28px rgba(143, 107, 255, 0.18);
+  transition: transform 0.08s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgba(143, 107, 255, 0.28);
+  border-color: #d8ccff;
+}
+
+/* Imagen con proporción */
+.cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #f3ecff;
+  border: 1px solid var(--lm-border);
+}
+.cover img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Título y meta */
+.card h3 {
+  font-size: 16px;
+  line-height: 1.25;
+  margin: 0;
+}
+.meta {
+  color: var(--lm-muted);
+  font-size: 13px;
+}
+.price {
+  font-weight: 900;
+  margin-top: 2px;
+}
+
+/* Botón agregar */
+.card button {
+  margin-top: 6px;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--lm-border);
+  padding: 10px 12px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(180deg, #b096ff, #9b7bff 60%, #8f6bff);
+  box-shadow: 0 10px 26px rgba(143, 107, 255, 0.28);
+  transition: filter 0.15s ease, transform 0.06s ease, box-shadow 0.2s ease;
+}
+.card button:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 14px 34px rgba(143, 107, 255, 0.38);
+}
+.card button:active {
+  transform: translateY(1px);
+}
+.card button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Banners */
+.banner {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  border: 1px solid var(--lm-border);
+}
+.banner.ok {
+  background: #f0fffb;
+  color: #1d7a62;
+  border-color: #b6f1e3;
+}
+.banner.err {
+  background: #fff0f5;
+  color: #9b2d57;
+  border-color: #f7c4d9;
+}
+
+/* Skeleton loading */
+.skel {
+  border-radius: 12px;
+  border: 1px solid var(--lm-border);
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(143, 107, 255, 0.15);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+.skel .img {
+  height: 160px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #efe8ff, #ffffff, #efe8ff);
+  background-size: 200% 100%;
+  animation: shine 1.2s linear infinite;
+  border: 1px solid var(--lm-border);
+}
+.skel .line {
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #efe8ff, #ffffff, #efe8ff);
+  background-size: 200% 100%;
+  animation: shine 1.2s linear infinite;
+}
+@keyframes shine {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Estado vacío */
+.empty {
+  text-align: center;
+  color: var(--lm-muted);
+  padding: 24px 0;
+}

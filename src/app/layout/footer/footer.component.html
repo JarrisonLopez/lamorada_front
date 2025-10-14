@@ -1,3 +1,69 @@
-<footer class="footer">
-  <small>© {{ year }} LaMorada</small>
+<footer class="site-footer" role="contentinfo">
+  <div class="container">
+    <!-- Marca -->
+    <a class="brand" routerLink="/home" aria-label="Ir al inicio">
+      <img
+        class="brand-logo"
+        src="assets/lamorada-logo.png"
+        alt="LaMorada"
+        width="28"
+        height="28"
+        decoding="async"
+      />
+      <span class="brand-name">La<span class="accent">Morada</span></span>
+    </a>
+
+    <!-- Navegación secundaria -->
+    <nav class="links" aria-label="Enlaces de pie de página">
+      <a routerLink="/product">Productos</a>
+      <a routerLink="/podcast">Podcasts</a>
+      <a routerLink="/post">Posts</a>
+      <a routerLink="/appointment">Citas</a>
+    </nav>
+
+    <!-- Social -->
+    <div class="social" aria-label="Redes sociales">
+      <a
+        href="https://instagram.com"
+        target="_blank"
+        rel="noopener"
+        aria-label="Instagram"
+        class="icon"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7Zm5 3.5A5.5 5.5 0 1 1 6.5 13 5.5 5.5 0 0 1 12 7.5Zm0 2A3.5 3.5 0 1 0 15.5 13 3.5 3.5 0 0 0 12 9.5Zm5.75-3.25a1.25 1.25 0 1 1-1.25 1.25 1.25 1.25 0 0 1 1.25-1.25Z"
+          />
+        </svg>
+      </a>
+      <a
+        href="https://twitter.com"
+        target="_blank"
+        rel="noopener"
+        aria-label="X/Twitter"
+        class="icon"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M2 3.5 10 13l-7.8 7.5H5l6.1-5.8L16.5 21H22l-8.3-9 7.5-7.5h-2.8L12 10.6 7.7 6H2z"
+          />
+        </svg>
+      </a>
+      <a href="mailto:hola@lamorada.com" aria-label="Correo" class="icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M3 5h18a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm9 7L3.5 7.8V7h17v.8L12 12Z"
+          />
+        </svg>
+      </a>
+    </div>
+
+    <!-- Línea legal -->
+    <div class="legal">
+      <small
+        >© {{ year }} LaMorada · <a routerLink="/privacy">Privacidad</a> ·
+        <a routerLink="/terms">Términos</a></small
+      >
+    </div>
+  </div>
 </footer>

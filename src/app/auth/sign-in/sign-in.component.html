@@ -1,19 +1,52 @@
-<h2>Iniciar sesión</h2>
+<section class="auth">
+  <div class="shell">
+    <header class="hero">
+      <div class="brand">
+        <img
+          class="brand-logo-img"
+          src="assets/lamorada-logo.png"
+          alt="LaMorada"
+          width="36"
+          height="36"
+          decoding="async"
+        />
+        <div class="brand-name">La<span class="accent">Morada</span></div>
+      </div>
+      <h2>Iniciar sesión</h2>
+      <p>Entra a tu espacio de bienestar 💜</p>
+    </header>
 
-<form [formGroup]="form" (ngSubmit)="onSubmit()" class="form">
-  <label>
-    Email
-    <input type="email" formControlName="email" />
-  </label>
+    <div class="card">
+      <form class="form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <div class="field">
+          <label class="label">Email</label>
+          <div class="input-wrap">
+            <span class="ico">✉️</span>
+            <input type="email" placeholder="tucorreo@ejemplo.com" formControlName="email" />
+          </div>
+        </div>
 
-  <label>
-    Contraseña
-    <input type="password" formControlName="password" />
-  </label>
+        <div class="field">
+          <label class="label">Contraseña</label>
+          <div class="input-wrap">
+            <span class="ico">🔒</span>
+            <input type="password" placeholder="Tu contraseña" formControlName="password" />
+          </div>
+        </div>
 
-  <button [disabled]="loading || form.invalid">{{ loading ? 'Entrando…' : 'Entrar' }}</button>
-</form>
+        <div class="actions">
+          <button [disabled]="loading || form.invalid">
+            {{ loading ? 'Entrando…' : 'Entrar' }}
+          </button>
+        </div>
 
-<p *ngIf="err" class="err">{{ err }}</p>
+        <div *ngIf="err" class="banner err" aria-live="assertive">{{ err }}</div>
 
-<p>¿No tienes cuenta? <a routerLink="/sign-up">Regístrate</a></p>
+        <p class="alt">
+          ¿No tienes cuenta?
+          <a routerLink="/sign-up">Regístrate</a>
+        </p>
+      </form>
+    </div>
+  </div>
+</section>

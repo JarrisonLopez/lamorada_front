@@ -1,2 +1,109 @@
-<h2>Bienvenida a LaMorada</h2>
-<p>Encuentra productos, agenda citas y escucha nuestro podcast.</p>
+<section class="home">
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-content">
+      <h1>Bienvenida a <span class="accent">LaMorada</span></h1>
+      <p class="sub">
+        Tu espacio de bienestar: encuentra productos, agenda tus citas y escucha nuestros podcasts.
+      </p>
+
+      <div class="cta">
+        <a routerLink="/product" class="btn btn-primary">Ver productos</a>
+        <a routerLink="/podcast" class="btn btn-ghost">Podcasts</a>
+        <a routerLink="/appointment" class="btn btn-soft">Agendar cita</a>
+      </div>
+
+      <ul class="badges" aria-label="Beneficios">
+        <li>🔒 Privacidad y seguridad</li>
+        <li>🎧 Contenido con expertos</li>
+        <li>🏠 Acompañamiento en casa</li>
+      </ul>
+    </div>
+
+    <div class="hero-art" aria-hidden="true">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+  </header>
+
+  <!-- FEATURES -->
+  <section class="features" aria-label="Qué puedes hacer en LaMorada">
+    <article class="card">
+      <div class="icon">🛍️</div>
+      <h3>Productos seleccionados</h3>
+      <p>Libros y recursos pensados para tu crecimiento personal.</p>
+      <a routerLink="/product" class="link">Explorar</a>
+    </article>
+
+    <article class="card">
+      <div class="icon">📅</div>
+      <h3>Agenda inteligente</h3>
+      <p>Reserva con profesionales en pocos pasos y recibe recordatorios.</p>
+      <a routerLink="/appointment" class="link">Agendar</a>
+    </article>
+
+    <article class="card">
+      <div class="icon">🎙️</div>
+      <h3>Podcasts con expertos</h3>
+      <p>Conversaciones que te acompañan: ansiedad, hábitos y más.</p>
+      <a routerLink="/podcast" class="link">Escuchar</a>
+    </article>
+  </section>
+
+  <!-- DESTACADOS -->
+  <section class="highlights" aria-label="Destacados">
+    <div class="hl-card">
+      <div class="hl-copy">
+        <h4>Productos de bienestar</h4>
+        <p>Los títulos más recomendados por nuestra comunidad.</p>
+        <a routerLink="/product" class="btn btn-primary">Ver catálogo</a>
+      </div>
+      <div class="hl-art books" aria-hidden="true"></div>
+    </div>
+
+    <div class="hl-card">
+      <div class="hl-copy">
+        <h4>Últimos podcasts</h4>
+        <p>Descubre episodios breves con ideas claras y prácticas.</p>
+        <a routerLink="/podcast" class="btn btn-soft">Reproducir ahora</a>
+      </div>
+      <div class="hl-art podcast" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIO -->
+  <section class="testimonial" aria-label="Testimonio">
+    <blockquote class="t-card">
+      <p>
+        “LaMorada me ayudó a ordenar mi rutina y a encontrar recursos valiosos. Se siente como un
+        abrazo digital.”
+      </p>
+      <footer>— Camila R.</footer>
+    </blockquote>
+  </section>
+
+  <!-- NEWSLETTER -->
+  <section class="newsletter">
+    <form class="n-card" (ngSubmit)="subscribe($event)">
+      <div class="n-copy">
+        <h4>Recibe tips de bienestar</h4>
+        <p class="muted">Un correo corto, 1 vez por semana. Sin spam.</p>
+      </div>
+
+      <div class="n-actions">
+        <input
+          type="email"
+          [value]="email"
+          (input)="onEmailInput($event)"
+          placeholder="tu@email.com"
+          aria-label="Correo electrónico"
+          required
+        />
+        <button class="btn btn-primary" type="submit">Suscribirme</button>
+      </div>
+
+      <p *ngIf="note" class="note ok" aria-live="polite">{{ note }}</p>
+    </form>
+  </section>
+</section>

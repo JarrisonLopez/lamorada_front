@@ -24,10 +24,7 @@ export class PostListComponent {
   err: string | null = null;
   posts: Post[] = [];
 
-  constructor(
-    private svc: PostService,
-    @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  constructor(private svc: PostService, @Inject(PLATFORM_ID) private platformId: Object) {}
 
   ngOnInit() {
     if (!isPlatformBrowser(this.platformId)) return;
@@ -37,12 +34,13 @@ export class PostListComponent {
   fetch() {
     this.loading = true;
     this.err = null;
-    this.svc.getPosts()
-      .pipe(finalize(() => this.loading = false))
+    this.svc
+      .getPosts()
+      .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (res: any[]) => {
           const all = (res || []) as Post[];
-          this.posts = all.filter(p => p.active !== false);
+          this.posts = all.filter((p) => p.active !== false);
         },
         error: (e: any) => {
           console.error('GET /post failed:', e);

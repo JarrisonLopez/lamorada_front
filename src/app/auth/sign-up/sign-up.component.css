@@ -1,2 +1,315 @@
-.form { display:grid; gap:.75rem; max-width:360px; }
-input, select, button { padding:.5rem .75rem; }
+/* ===== La Morada · Sign Up (claro, ordenado, tipografía pro) ===== */
+:root {
+  --lm-ink: #2a173d;
+  --lm-muted: #6d5b8a;
+  --lm-bg-1: #f7f3ff;
+  --lm-bg-2: #efe8ff;
+  --lm-panel: #ffffff;
+  --lm-border: #e6dcff;
+  --lm-accent: #8f6bff;
+  --lm-accent-2: #c084fc;
+  --lm-error-text: #8a245e;
+  --lm-radius: 16px;
+  --lm-shadow: 0 18px 60px rgba(79, 29, 135, 0.15);
+}
+
+.auth {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 32px 16px;
+  color: var(--lm-ink);
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
+  background: radial-gradient(900px 520px at 15% 10%, rgba(176, 135, 255, 0.35), transparent 60%),
+    radial-gradient(900px 520px at 85% 90%, rgba(240, 180, 255, 0.3), transparent 60%),
+    linear-gradient(180deg, var(--lm-bg-1), var(--lm-bg-2));
+}
+
+.shell {
+  width: 100%;
+  max-width: 860px;
+  display: grid;
+  gap: 18px;
+  margin: 0 auto;
+}
+
+/* Header */
+.hero {
+  text-align: center;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+/* Logo como imagen dentro del cuadrito */
+.brand-logo-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #ffffff; /* base clara detrás del PNG */
+  padding: 6px; /* “marco” blanco */
+  object-fit: contain;
+  object-position: center;
+  box-shadow: 0 10px 26px rgba(143, 107, 255, 0.35), 0 0 0 4px rgba(143, 107, 255, 0.1) inset; /* glow suave */
+}
+.brand-name {
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+.brand-name .accent {
+  color: var(--lm-accent);
+}
+.hero h2 {
+  margin: 8px 0 6px;
+  font-size: 28px;
+}
+.hero p {
+  margin: 0;
+  color: var(--lm-muted);
+}
+
+/* Card */
+.card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.9)),
+    var(--lm-panel);
+  border: 1px solid var(--lm-border);
+  border-radius: 20px;
+  box-shadow: var(--lm-shadow);
+  padding: 20px;
+}
+
+/* Sections */
+.section {
+  display: grid;
+  gap: 12px;
+  margin-top: 10px;
+}
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1;
+  color: #4f3c9c;
+  letter-spacing: 0.4px;
+  font-variant-caps: all-small-caps;
+}
+.legend .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--lm-accent), var(--lm-accent-2));
+  box-shadow: 0 0 0 4px rgba(143, 107, 255, 0.12);
+}
+.legend::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  margin-left: 10px;
+  background: linear-gradient(90deg, rgba(143, 107, 255, 0.35), rgba(143, 107, 255, 0));
+  border-radius: 999px;
+}
+
+/* Layout */
+.form {
+  display: grid;
+  gap: 14px;
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 760px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Fields */
+.field {
+  display: grid;
+  gap: 6px;
+}
+.label {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  line-height: 1.25;
+  color: #5d4bb0;
+  font-variant-caps: all-small-caps;
+  margin-bottom: 2px;
+}
+.input-wrap {
+  position: relative;
+}
+.ico {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #9b87b8;
+  pointer-events: none;
+}
+
+/* Inputs */
+input,
+select {
+  width: 100%;
+  background: #fff;
+  color: var(--lm-ink);
+  border: 1px solid var(--lm-border);
+  border-radius: 12px;
+  padding: 12px 14px 12px 36px;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+}
+select {
+  padding-left: 36px;
+}
+input::placeholder,
+select:invalid {
+  color: #b2a7d6;
+}
+input:focus,
+select:focus {
+  border-color: var(--lm-accent);
+  box-shadow: 0 0 0 2px rgba(143, 107, 255, 0.18);
+}
+
+/* Invalid (morado) */
+.invalid {
+  border-color: #a288ff !important;
+  box-shadow: 0 0 0 2px rgba(162, 136, 255, 0.22) !important;
+}
+
+/* Password: evita solapamiento y muestra el borde completo */
+.input-wrap input {
+  position: relative;
+  z-index: 1;
+  padding-right: 46px;
+}
+.pw-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #8b78aa;
+  cursor: pointer;
+  z-index: 2;
+}
+.pw-toggle:hover {
+  background: #f6f1ff;
+  color: #4f3c9c;
+}
+
+/* Fuerza de contraseña */
+.strength {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.strength-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #efe8ff;
+  border: 1px solid var(--lm-border);
+}
+.strength-bar > span {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ff6b88, #ffd166, #9bffdd);
+  transition: width 0.25s ease;
+}
+.strength-badge {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--lm-border);
+  background: #faf7ff;
+}
+
+/* Actions */
+.actions {
+  margin-top: 12px;
+}
+.actions,
+.actions button {
+  width: 100%;
+}
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--lm-border);
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(180deg, #b096ff, #9b7bff 60%, #8f6bff);
+  box-shadow: 0 10px 26px rgba(143, 107, 255, 0.35);
+  transition: filter 0.15s ease, transform 0.06s ease, box-shadow 0.2s ease;
+}
+button:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 14px 34px rgba(143, 107, 255, 0.45);
+}
+button:active {
+  transform: translateY(1px);
+}
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  box-shadow: none;
+  background: linear-gradient(180deg, #c9baff, #bdaaff);
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Banners */
+.banner {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  border: 1px solid var(--lm-border);
+}
+.banner.ok {
+  background: #f0fffb;
+  color: #1d7a62;
+  border-color: #b6f1e3;
+}
+.banner.err {
+  background: #fff0f5;
+  color: #9b2d57;
+  border-color: #f7c4d9;
+}
