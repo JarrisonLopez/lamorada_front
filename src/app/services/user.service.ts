@@ -2,7 +2,7 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
 import { Observable, of } from 'rxjs';
-import { map, catchError, tap } from 'rxjs/operators';
+import { map, catchError } from 'rxjs/operators';
 import { AuthStateService } from '../core/state/auth-state.service';
 
 export type Psychologist = { _id: string; name?: string; email?: string };
@@ -12,10 +12,13 @@ type JwtPayload = {
   id?: string;
   sub?: string;
   user_id?: string;
-  user?: { _id?: string; id?: string; name?: string; role?: string };
+  user?: { _id?: string; id?: string; name?: string; role?: string; email?: string; phone?: string; age?: number; specialty?: string };
   name?: string;
   email?: string;
   role?: 'patient' | 'psychologist' | string;
+  phone?: string;
+  age?: number;
+  specialty?: string;
   [k: string]: any;
 };
 
@@ -31,51 +34,24 @@ export class UserService {
 
   // ---------- SSR helpers ----------
   private isBrowser() { return isPlatformBrowser(this.platformId); }
-
-  private lsGet(key: string): string | null {
-    if (!this.isBrowser()) return null;
-    try { return localStorage.getItem(key); } catch { return null; }
-  }
-  private lsSet(key: string, value: string) {
-    if (!this.isBrowser()) return;
-    try { localStorage.setItem(key, value); } catch {}
-  }
-  private lsRemove(key: string) {
-    if (!this.isBrowser()) return;
-    try { localStorage.removeItem(key); } catch {}
-  }
+  private lsGet(key: string): string | null { if (!this.isBrowser()) return null; try { return localStorage.getItem(key); } catch { return null; } }
+  private lsSet(key: string, value: string) { if (!this.isBrowser()) return; try { localStorage.setItem(key, value); } catch {} }
+  private lsRemove(key: string) { if (!this.isBrowser()) return; try { localStorage.removeItem(key); } catch {} }
 
   // ---------- Token / sesión ----------
   getToken(): string | null { return this.lsGet('token'); }
-  setToken(t: string) {
-    this.lsSet('token', t);
-    this.authState.setAuth({ isLogged: !!t, token: t });
-  }
-  clearToken() {
-    this.lsRemove('token');
-    this.lsRemove('role');
-    this.lsRemove('name');
-    this.authState.clear();
-  }
+  setToken(t: string) { this.lsSet('token', t); this.authState.setAuth({ isLogged: !!t, token: t }); }
+  clearToken() { this.lsRemove('token'); this.lsRemove('role'); this.lsRemove('name'); this.authState.clear(); }
 
   getRole(): string | null { return this.lsGet('role'); }
-  setRole(r: string) {
-    this.lsSet('role', r);
-    this.authState.setAuth({ role: r as any, isLogged: !!this.getToken(), token: this.getToken() });
-  }
+  setRole(r: string) { this.lsSet('role', r); this.authState.setAuth({ role: r as any, isLogged: !!this.getToken(), token: this.getToken() }); }
 
   getName(): string | null { return this.lsGet('name'); }
-  setName(n: string) {
-    this.lsSet('name', n);
-    this.authState.setAuth({ name: n, isLogged: !!this.getToken(), token: this.getToken() });
-  }
+  setName(n: string) { this.lsSet('name', n); this.authState.setAuth({ name: n, isLogged: !!this.getToken(), token: this.getToken() }); }
 
   private getAuthHeaders(): HttpHeaders {
     const token = this.getToken();
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      Authorization: token ? `Bearer ${token}` : '',
-    });
+    return new HttpHeaders({ 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' });
   }
 
   // ---------- JWT utils (tolerante) ----------
@@ -83,54 +59,36 @@ export class UserService {
     if (!jwt) return null;
     try {
       const [, payloadB64] = jwt.split('.');
-      // Base64 URL-safe -> estándar
-      const normalized = payloadB4ToStd(payloadB64);
-      const json = atob(normalized);
+      let s = (payloadB64 || '').replace(/-/g, '+').replace(/_/g, '/');
+      const pad = s.length % 4; if (pad) s += '='.repeat(4 - pad);
+      const json = atob(s);
       return JSON.parse(json) as T;
     } catch { return null; }
-
-    function payloadB4ToStd(b64: string): string {
-      // reemplaza - _ y rellena =
-      let s = (b64 || '').replace(/-/g, '+').replace(/_/g, '/');
-      const pad = s.length % 4;
-      if (pad) s += '='.repeat(4 - pad);
-      return s;
-    }
   }
 
-  /** Público: útil cuando /user/me devuelve 404 y debemos completar desde el JWT */
-  public deriveRoleAndNameFromJwt(jwt: string | null): { role?: string; name?: string; email?: string } {
+  /** Extrae id/rol/nombre/email (y si hay) phone/age/specialty del JWT, de forma tolerante */
+  profileFromToken(jwt: string | null): {
+    id?: string; role?: string; name?: string; email?: string; phone?: string; age?: number; specialty?: string;
+  } {
     const p = this.decodeJwt<JwtPayload>(jwt);
+    const id = p?._id ?? p?.id ?? p?.user_id ?? p?.user?._id ?? p?.user?.id ?? p?.sub;
     const role = p?.role ?? p?.user?.role;
     const name = p?.name ?? p?.user?.name;
-    const email = (p as any)?.email;
-    return { role, name, email };
+    const email = p?.email ?? p?.user?.email;
+    const phone = (p as any)?.phone ?? p?.user?.phone;
+    const age = (p as any)?.age ?? p?.user?.age;
+    const specialty = (p as any)?.specialty ?? p?.user?.specialty;
+    return { id: id ? String(id) : undefined, role, name, email, phone, age, specialty };
   }
 
-  // Intenta poblar role/name desde /user/me; si falla, cae a decode del JWT
+  // ---------- Bootstrap UI desde token (sin /user/me) ----------
   bootstrapFromToken(): Observable<{ role?: string; name?: string }> {
     const jwt = this.getToken();
     if (!jwt) return of({});
-
-    return this.getMe().pipe(
-      tap((me: any) => {
-        if (me?.role) this.setRole(me.role);
-        if (me?.name) this.setName(me.name);
-      }),
-      map((me: any) => {
-        const role = me?.role ?? this.getRole() ?? this.deriveRoleAndNameFromJwt(jwt).role;
-        const name = me?.name ?? this.getName() ?? this.deriveRoleAndNameFromJwt(jwt).name;
-        if (role && !this.getRole()) this.setRole(role);
-        if (name && !this.getName()) this.setName(name);
-        return { role, name };
-      }),
-      catchError(() => {
-        const { role, name } = this.deriveRoleAndNameFromJwt(jwt);
-        if (role) this.setRole(role);
-        if (name) this.setName(name ?? '');
-        return of({ role, name });
-      })
-    );
+    const { role, name } = this.profileFromToken(jwt);
+    if (role) this.setRole(role);
+    if (name) this.setName(name);
+    return of({ role, name });
   }
 
   // ---------- AUTH ----------
@@ -139,8 +97,7 @@ export class UserService {
   }
 
   logout(): Observable<any> {
-    return this.http.post(`${this.baseUrl}/auth/logout`, {}, { headers: this.getAuthHeaders() })
-      .pipe(tap(() => this.clearToken()));
+    return this.http.post(`${this.baseUrl}/auth/logout`, {}, { headers: this.getAuthHeaders() });
   }
 
   // ---------- USER ----------
@@ -148,73 +105,74 @@ export class UserService {
     return this.http.post(`${this.baseUrl}/user/register`, data);
   }
 
+  /**
+   * Con este back **NO existe /user/me**.
+   * - Si rol=psychologist: intenta completar el registro público con GET /user/get-psychologists.
+   * - Si rol=patient: devuelve sólo lo que hay en el token.
+   * Devuelve SIEMPRE un objeto "tipo User" (best-effort) para componentes que esperan _id/role/name/email.
+   */
   getMe(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/user/me`, { headers: this.getAuthHeaders() });
-  }
+    const t = this.profileFromToken(this.getToken());
+    const base = {
+      _id: t.id ?? undefined,
+      role: t.role ?? undefined,
+      name: t.name ?? undefined,
+      email: t.email ?? undefined,
+      phone: t.phone ?? undefined,
+      age: t.age ?? undefined,
+      specialty: t.specialty ?? undefined,
+    };
 
-  /** Versión tolerante: si /user/me responde 404, devuelve null en lugar de romper */
-  getMeSafe(): Observable<any | null> {
-    return this.http.get(`${this.baseUrl}/user/me`, { headers: this.getAuthHeaders() })
-      .pipe(
-        catchError((err) => {
-          if (err?.status === 404) return of(null);
-          throw err;
-        })
+    if ((t.role ?? '').toLowerCase() === 'psychologist') {
+      return this.http.get(`${this.baseUrl}/user/get-psychologists`).pipe(
+        map((r: any) => {
+          const list: any[] = (r?.users ?? r?.psychologists ?? r?.data ?? r?.items ?? []);
+          const fromList = list.find(u =>
+            String(u?._id ?? u?.id ?? u?.user_id ?? '') === String(t.id ?? '') ||
+            String(u?.email ?? '') === String(t.email ?? '')
+          ) || {};
+          return { ...fromList, ...base, _id: base._id ?? fromList?._id };
+        }),
+        catchError(() => of(base))
       );
+    }
+
+    return of(base);
   }
 
-  updateMe(data: any): Observable<any> {
-    return this.http.put(`${this.baseUrl}/user/me`, data, { headers: this.getAuthHeaders() });
+  /** PUT /user/:id usando el id del JWT */
+  updateMe(id: string, data: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/user/${encodeURIComponent(id)}`, data, { headers: this.getAuthHeaders() });
   }
 
-  updateUser(id: string, data: any): Observable<any> {
-    return this.http.put(`${this.baseUrl}/user/${id}`, data, { headers: this.getAuthHeaders() });
+  /** Conveniencia: usa id del token automáticamente */
+  updateMeCompat(data: any): Observable<any> {
+    const t = this.profileFromToken(this.getToken());
+    if (!t.id) return of({ error: 'NO_ID_IN_TOKEN' });
+    return this.updateMe(t.id, data);
   }
 
   getPatients(): Observable<any> {
+    // requiere ser psicólogo (el back valida)
     return this.http.get(`${this.baseUrl}/user/get-patients`, { headers: this.getAuthHeaders() });
   }
 
-  /**
-   * Devuelve siempre { list: Psychologist[] }.
-   * Tolera r.psychologists | r.users | r.data | r.result | r.items
-   * y normaliza id como _id buscando: _id | id | user_id | uid.
-   */
   getPsychologists(): Observable<{ list: Psychologist[]; error?: any }> {
-    return this.http
-      .get(`${this.baseUrl}/user/get-psychologists`, { headers: this.getAuthHeaders() })
-      .pipe(
-        map((r: any) => {
-          const raw =
-            r?.psychologists ??
-            r?.users ??
-            r?.data ??
-            r?.result ??
-            r?.items ??
-            [];
-          const list: Psychologist[] = (Array.isArray(raw) ? raw : []).map((u: any) => {
-            const _id = u?._id ?? u?.id ?? u?.user_id ?? u?.uid ?? '';
-            return {
-              _id: String(_id),
-              name: u?.name ?? u?.fullName ?? u?.fullname ?? u?.firstName ?? '',
-              email: u?.email ?? u?.mail ?? '',
-            };
-          }).filter(p => !!p._id);
-          // eslint-disable-next-line no-console
-          console.debug('[getPsychologists] normalizado:', list);
-          return { list };
-        }),
-        catchError((err) => {
-          // eslint-disable-next-line no-console
-          console.error('[getPsychologists] error:', err);
-          return of({ list: [], error: err });
-        })
-      );
+    return this.http.get(`${this.baseUrl}/user/get-psychologists`).pipe(
+      map((r: any) => {
+        const raw = r?.psychologists ?? r?.users ?? r?.data ?? r?.result ?? r?.items ?? [];
+        const list: Psychologist[] = (Array.isArray(raw) ? raw : []).map((u: any) => {
+          const _id = u?._id ?? u?.id ?? u?.user_id ?? u?.uid ?? '';
+          return { _id: String(_id), name: u?.name ?? '', email: u?.email ?? '' };
+        }).filter(p => !!p._id);
+        return { list };
+      }),
+      catchError((err) => of({ list: [], error: err }))
+    );
   }
 
   getPsychologistsBySpecialty(specialty: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/user/by-specialty?specialty=${encodeURIComponent(specialty)}`,
-      { headers: this.getAuthHeaders() });
+    return this.http.get(`${this.baseUrl}/user/by-specialty?specialty=${encodeURIComponent(specialty)}`);
   }
 
   deleteMe(): Observable<any> {

@@ -1,8 +1,40 @@
-<h2>Checkout</h2>
-<div *ngFor="let it of cart().items">
-  {{ it.title }} × {{ it.quantity }} — ${{ it.price * it.quantity }}
-</div>
-<p>Total: <strong>${{ total }}</strong></p>
-<button (click)="payNow()">Pagar ahora</button>
-<p *ngIf="msg()" style="color:green">{{ msg() }}</p>
-<p *ngIf="err()" style="color:red">{{ err() }}</p>
+<section class="wrap">
+  <h2>Checkout</h2>
+
+  <div class="card">
+    <h3>Resumen</h3>
+    <p>Total a pagar: <strong>$ {{ total | number:'1.0-0' }}</strong></p>
+  </div>
+
+  <div class="card">
+    <h3>Selecciona un método de pago</h3>
+
+    <div *ngIf="loading">Cargando métodos de pago…</div>
+
+    <ng-container *ngIf="!loading">
+      <div *ngIf="cards.length === 0" class="empty">
+        No tienes tarjetas guardadas.
+        <button type="button" class="btn" (click)="goToAddCard()">Añadir tarjeta</button>
+      </div>
+
+      <ul class="list" *ngIf="cards.length">
+        <li *ngFor="let c of cards">
+          <div class="info">
+            <div class="title">{{ mask(c.card_number) }}</div>
+            <div class="meta">
+              <span>{{ c.card_name }}</span>
+              <span>Vence: {{ c.expiration_date }}</span>
+            </div>
+          </div>
+          <button class="btn primary" (click)="onPay(c)" [disabled]="paying">
+            {{ paying ? 'Procesando…' : 'Pagar' }}
+          </button>
+        </li>
+      </ul>
+
+      <div class="addmore">
+        <a routerLink="/payment">Gestionar métodos de pago</a>
+      </div>
+    </ng-container>
+  </div>
+</section>

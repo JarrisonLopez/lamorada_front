@@ -1,1 +1,11 @@
-button { margin-top:.5rem; padding:.5rem .75rem; }
+.wrap{max-width:880px;margin:24px auto;padding:0 12px}
+.card{background:#fff;border:1px solid #eee;border-radius:12px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.04);margin-bottom:16px}
+.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;align-items:center;justify-content:space-between;border:1px solid #f0f0f0;border-radius:10px;padding:10px 12px;margin:8px 0}
+.info{display:flex;flex-direction:column}
+.title{font-weight:600}
+.meta{display:flex;gap:12px;color:#555}
+.btn{height:36px;padding:0 14px;border-radius:8px;border:1px solid #ddd;background:#f6f6ff;cursor:pointer}
+.btn.primary{border-color:#4f46e5;background:#4f46e5;color:#fff}
+.empty{display:flex;align-items:center;gap:10px}
+.addmore{margin-top:8px}

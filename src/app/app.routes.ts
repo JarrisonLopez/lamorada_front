@@ -16,17 +16,24 @@ import { PostManageComponent } from './pages/post/post-manage.component';
 // Carrito / Citas / Disponibilidad
 import { CartComponent } from './pages/cart/cart.component';
 import { AppointmentComponent } from './pages/appointment/appointment.component';
-import { AvailabilityComponent } from './pages/availability/availability.component';
-import { AvailabilityManageComponent } from './pages/availability/availability-manage.component';
+import { AvailabilityComponent } from './pages/availability/availability.component';          // público
+import { AvailabilityManageComponent } from './pages/availability/availability-manage.component'; // gestión
 
-// Perfil (lista de psicólogos)
+// Perfil (lista de psicólogos) público
 import { ProfileComponent } from './pages/profile/profile.component';
 
-// Editar perfil (propio)
+// Editar perfil (propio) — SOLO CLIENTE
 import { ProfileEditComponent } from './pages/profile-edit/profile-edit.component';
 
-// Guard
+// Métodos de pago
+import { PaymentComponent } from './pages/payment/payment.component';
+
+// Checkout
+import { CheckoutComponent } from './pages/checkout/checkout.component';
+
+// Guards
 import { AuthRoleGuard } from './guards/auth-role.guard';
+import { clientOnlyGuard } from './guards/client-only.guard';
 
 export const routes: Routes = [
   { path: 'sign-in', component: SignInComponent },
@@ -71,10 +78,26 @@ export const routes: Routes = [
 
   // Perfil (público): lista todos los psicólogos
   { path: 'profile', component: ProfileComponent },
-    // Editar perfil propio (protegida)
+
+  // Editar perfil propio (protegida + SOLO CLIENTE)
   {
     path: 'profile/edit',
     component: ProfileEditComponent,
+    canMatch: [clientOnlyGuard],  // <- evita SSR
+    canActivate: [AuthRoleGuard],
+    data: { expectedRoles: ['patient', 'psychologist'] }
+  },
+  // Métodos de pago (protegida + SOLO CLIENTE)
+  {
+    path: 'payment',
+    component: PaymentComponent,
+    canActivate: [AuthRoleGuard],
+    data: { expectedRoles: ['patient', 'psychologist'] }
+  },
+  // Checkout (protegida + SOLO CLIENTE)
+  {
+    path: 'checkout',
+    component: CheckoutComponent,
     canActivate: [AuthRoleGuard],
     data: { expectedRoles: ['patient', 'psychologist'] }
   },

@@ -1,52 +1,69 @@
-<section class="wrap" *ngIf="!loading; else loadTpl">
+<section class="wrap">
   <h2>Editar mi perfil</h2>
 
-  <form class="card" [formGroup]="form" (ngSubmit)="$event.preventDefault(); submit()">
-    <div class="row">
-      <label class="col">
-        <span>Nombre</span>
-        <input type="text" formControlName="name" placeholder="Tu nombre completo">
-        <small class="err" *ngIf="form.controls.name.touched && form.controls.name.invalid">
-          Ingresa un nombre válido.
-        </small>
-      </label>
+  @if (loading) {
+    <p>Cargando…</p>
+  } @else {
+    @if (missingDoc) {
+      <div class="card warn">
+        <p>
+          Aún no existe tu ficha (perfil) en el servidor. Tu JWT trae algunos datos
+          (por ejemplo, nombre y rol), pero para crear la ficha completa debes pasar por
+          <strong>registro</strong>, porque el backend exige campos como:
+          <code>document_type</code>, <code>last_name1</code>, <code>last_name2</code>,
+          <code>age</code>, <code>phone</code> y <code>password</code>.
+        </p>
+        <div class="row">
+          <button type="button" class="btn" (click)="createNow()">Crear ficha ahora</button>
+          <button type="button" class="link" (click)="fetch()">Reintentar cargar</button>
+        </div>
+      </div>
+    } @else {
+      <form [formGroup]="form" class="form" (ngSubmit)="submit()">
+        <div class="grid">
+          <label>Nombre
+            <input type="text" formControlName="name" />
+          </label>
 
-      <label class="col">
-        <span>Email</span>
-        <input type="email" formControlName="email" placeholder="tucorreo@dominio.com">
-        <small class="err" *ngIf="form.controls.email.touched && form.controls.email.invalid">
-          Email inválido.
-        </small>
-      </label>
-    </div>
+          <label>Email
+            <input type="email" formControlName="email" />
+          </label>
 
-    <div class="row">
-      <label class="col">
-        <span>Teléfono</span>
-        <input type="tel" formControlName="phone" placeholder="3001234567">
-      </label>
+          <label>Teléfono
+            <input type="tel" formControlName="phone" />
+          </label>
 
-      <label class="col">
-        <span>Edad</span>
-        <input type="number" min="0" max="120" formControlName="age" placeholder="25">
-      </label>
-    </div>
+          <label>Edad
+            <input type="number" formControlName="age" min="0" />
+          </label>
 
-    <div class="row" *ngIf="role === 'psychologist'">
-      <label class="col">
-        <span>Especialidad</span>
-        <input type="text" formControlName="specialty" placeholder="Psicoterapeuta">
-      </label>
-    </div>
+          @if (role === 'psychologist') {
+            <label>Especialidad
+              <input type="text" formControlName="specialty" />
+            </label>
+          }
+        </div>
 
-    <div class="actions">
-      <button type="submit" [disabled]="saving || form.invalid">
-        {{ saving ? 'Guardando…' : 'Guardar cambios' }}
-      </button>
-    </div>
-  </form>
+        <h3>Contraseña requerida para guardar</h3>
+        <p class="hint">
+          El servidor exige enviar una contraseña válida en cada actualización.
+          <strong>Puedes usar la misma que ya tienes</strong> (escríbela en ambos campos).
+        </p>
+        <div class="grid">
+          <label>Nueva contraseña (o la actual)
+            <input type="password" formControlName="password" placeholder="Obligatoria para guardar" />
+          </label>
+          <label>Repetir contraseña
+            <input type="password" formControlName="rePassword" placeholder="Obligatoria para guardar" />
+          </label>
+        </div>
+        <p class="hint">Debe tener mínimo 8 caracteres, con mayúscula, minúscula, dígito y símbolo.</p>
+
+        <div class="row actions">
+          <button type="submit" class="btn primary" [disabled]="saving">Guardar</button>
+          <button type="button" class="link" (click)="fetch()" [disabled]="saving">Reintentar</button>
+        </div>
+      </form>
+    }
+  }
 </section>
-
-<ng-template #loadTpl>
-  <div class="card muted">Cargando…</div>
-</ng-template>
