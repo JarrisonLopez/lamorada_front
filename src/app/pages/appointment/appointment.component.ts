@@ -19,10 +19,10 @@ export class AppointmentComponent implements OnInit {
     date: ['', Validators.required],
     time: ['', Validators.required],
     psychologist_id: [''],
-    notes: ['']
+    notes: [''],
   });
 
-  minDate = '';     // yyyy-MM-dd (hoy)
+  minDate = ''; // yyyy-MM-dd (hoy)
   minTime = '00:00'; // HH:mm (se ajusta a próximos 15 min si es hoy)
 
   loading = false;
@@ -63,7 +63,7 @@ export class AppointmentComponent implements OnInit {
   private async loadPsychologists() {
     try {
       const r = await firstValueFrom(this.users.getPsychologists());
-      this.psychologists = Array.isArray(r?.users) ? r.users : (Array.isArray(r) ? r : []);
+      this.psychologists = Array.isArray(r?.users) ? r.users : Array.isArray(r) ? r : [];
     } catch {
       this.psychologists = [];
     }
@@ -86,7 +86,7 @@ export class AppointmentComponent implements OnInit {
     const n = new Date(now);
     n.setSeconds(0, 0);
     const mins = n.getMinutes();
-    const jump = [0, 15, 30, 45].find(m => m > mins);
+    const jump = [0, 15, 30, 45].find((m) => m > mins);
     if (jump !== undefined) {
       n.setMinutes(jump);
     } else {
@@ -150,7 +150,7 @@ export class AppointmentComponent implements OnInit {
         date,
         time,
         notes: this.form.value.notes || '',
-        psychologist_id: this.form.value.psychologist_id || undefined
+        psychologist_id: this.form.value.psychologist_id || undefined,
       };
       const resp = await firstValueFrom(this.appt.createAppointment(payload));
       this.msg = resp?.message || 'Cita creada.';
@@ -160,5 +160,41 @@ export class AppointmentComponent implements OnInit {
     } finally {
       this.loading = false;
     }
+  }
+
+  // ---------- Helpers UI (chips y resumen) ----------
+  psychName(): string {
+    const id = this.form?.value?.psychologist_id || '';
+    const p = (this.psychologists || []).find((x: any) => x?._id === id);
+    return p?.name || 'Cualquiera';
+  }
+
+  previewDate(): string {
+    const d = this.form?.value?.date;
+    if (!d) return '';
+    const [Y, M, D] = d.split('-');
+    return `${D}/${M}/${Y}`;
+  }
+
+  previewTime(): string {
+    const t = this.form?.value?.time;
+    if (!t) return '';
+    return t;
+  }
+
+  pickToday(): void {
+    this.form.get('date')?.setValue(this.minDate);
+    this.updateMinTime();
+  }
+
+  pickTomorrow(): void {
+    const n = new Date();
+    n.setDate(n.getDate() + 1);
+    const yyyy = n.getFullYear();
+    const mm = String(n.getMonth() + 1).padStart(2, '0');
+    const dd = String(n.getDate()).padStart(2, '0');
+    const tomorrow = `${yyyy}-${mm}-${dd}`;
+    this.form.get('date')?.setValue(tomorrow);
+    this.updateMinTime();
   }
 }

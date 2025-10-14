@@ -1,62 +1,101 @@
-<h2>Podcasts</h2>
-
-<!-- Tabs para psicólogo -->
-<nav *ngIf="isPsych()" class="tabs">
-  <button [class.active]="tab()==='list'" (click)="toTab('list')">Listado</button>
-  <button [class.active]="tab()==='create'" (click)="toTab('create')">Nuevo</button>
-</nav>
-
-<p *ngIf="err()" class="err">{{ err() }}</p>
-<p *ngIf="msg()" class="ok">{{ msg() }}</p>
-
-<!-- Listado visible para todos -->
-<section *ngIf="tab()==='list' || !isPsych()">
-  <div *ngIf="loading()">Cargando podcasts…</div>
-
-  <div class="grid" *ngIf="!loading() && podcasts().length">
-    <article class="card" *ngFor="let p of podcasts()">
-      <div class="video" *ngIf="p.youtubeId">
-        <iframe
-          [src]="buildEmbedUrl(p.youtubeId) | safeUrl"
-          title="YouTube player"
-          frameborder="0"
-          allowfullscreen>
-        </iframe>
-      </div>
-
-      <h3 class="title">{{ p.title }}</h3>
-      <p class="desc" *ngIf="p.description">{{ p.description }}</p>
-      <small class="meta" *ngIf="p.createdAt">{{ p.createdAt | date:'short' }}</small>
-      <small class="meta" *ngIf="p.creator_name"> • {{ p.creator_name }}</small>
-
-      <!-- Solo el autor ve Eliminar -->
-      <div class="row" *ngIf="isOwner(p)">
-        <button class="danger" (click)="remove(p)">Eliminar</button>
-      </div>
-    </article>
+<section class="page">
+  <!-- HERO -->
+  <div class="hero">
+    <h2>Podcasts</h2>
+    <p>Historias, técnicas y conversaciones para tu bienestar 💜</p>
   </div>
 
-  <div *ngIf="!loading() && !podcasts().length">No hay podcasts.</div>
-</section>
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <form class="search" (ngSubmit)="$event.preventDefault()">
+      <span class="ico">🔎</span>
+      <input
+        [value]="q()"
+        (input)="onQueryInput($event)"
+        placeholder="Buscar por título, autor o descripción…"
+        aria-label="Buscar podcasts"
+      />
+    </form>
 
-<!-- Form crear (solo psicólogo) -->
-<section *ngIf="isPsych() && tab()==='create'" class="form-wrap">
-  <h3>Nuevo podcast</h3>
-  <form [formGroup]="form" (ngSubmit)="create()" class="form">
-    <label>Título
-      <input formControlName="title" />
-    </label>
+    <div class="select" role="group" aria-label="Ordenar">
+      <span style="color: #9b87b8; font-weight: 700">Ordenar</span>
+      <select [value]="sort()" (change)="onSortChange($event)">
+        <option value="new">Recientes</option>
+        <option value="old">Antiguos</option>
+        <option value="title">Título A–Z</option>
+      </select>
+    </div>
 
-    <label>Descripción
-      <textarea rows="3" formControlName="description"></textarea>
-    </label>
+    <!-- Tabs (solo psicólogo) -->
+    <nav *ngIf="isPsych()" class="tabs" aria-label="Gestión">
+      <button [class.active]="tab() === 'list'" (click)="toTab('list')">Listado</button>
+      <button [class.active]="tab() === 'create'" (click)="toTab('create')">Nuevo</button>
+    </nav>
+  </div>
 
-    <label>YouTube (ID o URL)
-      <input formControlName="youtube" />
-    </label>
+  <!-- Banners -->
+  <p *ngIf="err()" class="err" aria-live="assertive">{{ err() }}</p>
+  <p *ngIf="msg()" class="ok" aria-live="polite">{{ msg() }}</p>
 
-    <button [disabled]="saving() || form.invalid">
-      {{ saving() ? 'Creando…' : 'Crear' }}
-    </button>
-  </form>
+  <!-- LISTA -->
+  <section *ngIf="tab() === 'list' || !isPsych()">
+    <div *ngIf="loading()">Cargando podcasts…</div>
+
+    <div class="grid" *ngIf="!loading() && filtered().length">
+      <article class="card" *ngFor="let p of filtered()">
+        <div class="video" *ngIf="p.youtubeId">
+          <iframe
+            [src]="buildEmbedUrl(p.youtubeId) | safeUrl"
+            title="YouTube player"
+            allowfullscreen
+          >
+          </iframe>
+          <span class="play">▶︎ Ver</span>
+        </div>
+
+        <h3 class="title">{{ p.title }}</h3>
+        <p class="desc" *ngIf="p.description">{{ p.description }}</p>
+
+        <div class="meta-row">
+          <span class="chip" *ngIf="p.createdAt"
+            >🗓️ {{ p.createdAt | date : 'dd/MM/yy, HH:mm' }}</span
+          >
+          <span class="chip" *ngIf="p.creator_name">👤 {{ p.creator_name }}</span>
+        </div>
+
+        <div class="actions" *ngIf="isOwner(p)">
+          <button class="danger" (click)="remove(p)">Eliminar</button>
+        </div>
+      </article>
+    </div>
+
+    <div class="empty" *ngIf="!loading() && !filtered().length">
+      No encontramos podcasts para tu búsqueda.
+    </div>
+  </section>
+
+  <!-- CREAR -->
+  <section *ngIf="isPsych() && tab() === 'create'" class="form-wrap">
+    <h3>Nuevo podcast</h3>
+    <form [formGroup]="form" (ngSubmit)="create()" class="form" novalidate>
+      <label
+        >Título
+        <input formControlName="title" placeholder="Ej: Técnicas de respiración" />
+      </label>
+
+      <label
+        >Descripción
+        <textarea rows="3" formControlName="description" placeholder="Resumen breve…"></textarea>
+      </label>
+
+      <label
+        >YouTube (ID o URL)
+        <input formControlName="youtube" placeholder="Ej: https://youtu.be/VIDEO_ID" />
+      </label>
+
+      <button [disabled]="saving() || form.invalid">
+        {{ saving() ? 'Creando…' : 'Crear' }}
+      </button>
+    </form>
+  </section>
 </section>

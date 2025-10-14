@@ -1,1 +1,132 @@
-.footer { padding: 1rem; border-top: 1px solid #eee; text-align: center; color: #666; }
+/* ===== La Morada · Footer ===== */
+:root {
+  --lm-ink: #2a173d;
+  --lm-muted: #6d5b8a;
+  --lm-bg-1: #f7f3ff;
+  --lm-bg-2: #efe8ff;
+  --lm-panel: #ffffff;
+  --lm-border: #e6dcff;
+  --lm-accent: #8f6bff;
+  --lm-accent-2: #c084fc;
+  --lm-shadow: 0 18px 60px rgba(79, 29, 135, 0.12);
+}
+
+.site-footer {
+  margin-top: 40px;
+  background: radial-gradient(900px 300px at 15% 100%, rgba(176, 135, 255, 0.18), transparent 60%),
+    radial-gradient(900px 300px at 85% 100%, rgba(240, 180, 255, 0.16), transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), #fff);
+  border-top: 1px solid var(--lm-border);
+}
+
+.container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 20px 16px 28px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+}
+
+@media (max-width: 880px) {
+  .container {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+}
+
+/* Marca */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--lm-ink);
+  font-weight: 800;
+}
+.brand-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #fff;
+  padding: 5px;
+  object-fit: contain;
+  object-position: center;
+  box-shadow: 0 8px 20px rgba(143, 107, 255, 0.35), 0 0 0 3px rgba(143, 107, 255, 0.1) inset;
+}
+.brand-name .accent {
+  color: var(--lm-accent);
+}
+
+/* Links */
+.links {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.links a {
+  color: var(--lm-ink);
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.links a:hover {
+  background: #fff;
+  border-color: var(--lm-border);
+  box-shadow: 0 6px 20px rgba(143, 107, 255, 0.16);
+}
+
+/* Social */
+.social {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+@media (max-width: 880px) {
+  .social {
+    justify-content: center;
+  }
+}
+
+.icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--lm-border);
+  box-shadow: 0 8px 20px rgba(143, 107, 255, 0.18);
+  color: var(--lm-accent);
+  transition: transform 0.08s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.icon:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 12px 30px rgba(143, 107, 255, 0.28);
+}
+.icon svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+/* Legal */
+.legal {
+  grid-column: 1 / -1;
+  text-align: center;
+  margin-top: 6px;
+  color: var(--lm-muted);
+}
+.legal a {
+  color: var(--lm-accent);
+  text-decoration: none;
+}
+.legal a:hover {
+  text-decoration: underline;
+}

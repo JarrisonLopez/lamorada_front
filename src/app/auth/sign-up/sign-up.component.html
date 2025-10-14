@@ -1,61 +1,219 @@
-<form [formGroup]="form" (ngSubmit)="submit()" class="form" autocomplete="off">
-  <h2>Crear cuenta</h2>
+<section class="auth">
+  <div class="shell">
+    <header class="hero">
+      <div class="brand">
+        <img
+          class="brand-logo-img"
+          src="assets/lamorada-logo.png"
+          alt="LaMorada"
+          width="36"
+          height="36"
+          decoding="async"
+        />
+        <div class="brand-name">La<span class="accent">Morada</span></div>
+      </div>
+      <h2>Crear cuenta</h2>
+      <p>Un registro rápido para entrar a tu espacio de bienestar 💜</p>
+    </header>
 
-  <div class="row">
-    <select formControlName="document_type">
-      <option value="" disabled selected>Tipo de documento</option>
-      <option *ngFor="let t of documentTypes" [value]="t.value">{{ t.label }}</option>
-    </select>
-    <input placeholder="Número de documento" formControlName="_id" />
+    <div class="card" role="region" aria-labelledby="signup-title">
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form" autocomplete="off" novalidate>
+        <!-- Sección 1 -->
+        <div class="section">
+          <div class="legend">
+            <span class="dot"></span> <span id="signup-title">Identificación</span>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label class="label">Tipo de documento</label>
+              <div class="input-wrap">
+                <span class="ico">🪪</span>
+                <select
+                  formControlName="document_type"
+                  [class.invalid]="f['document_type'].touched && f['document_type'].invalid"
+                  required
+                >
+                  <option value="" disabled selected>Selecciona…</option>
+                  <option *ngFor="let t of documentTypes" [value]="t.value">{{ t.label }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label">Número de documento</label>
+              <div class="input-wrap">
+                <span class="ico">#</span>
+                <input
+                  formControlName="_id"
+                  placeholder="Ej: 123456789"
+                  [class.invalid]="f['_id'].touched && f['_id'].invalid"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección 2 -->
+        <div class="section">
+          <div class="legend"><span class="dot"></span> <span>Datos personales</span></div>
+
+          <div class="field">
+            <label class="label">Nombre(s)</label>
+            <div class="input-wrap">
+              <span class="ico">👤</span>
+              <input
+                formControlName="name"
+                placeholder="Tu nombre"
+                [class.invalid]="f['name'].touched && f['name'].invalid"
+              />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label class="label">Primer apellido</label>
+              <div class="input-wrap">
+                <span class="ico">👤</span>
+                <input
+                  formControlName="last_name1"
+                  placeholder="Primer apellido"
+                  [class.invalid]="f['last_name1'].touched && f['last_name1'].invalid"
+                />
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">Segundo apellido</label>
+              <div class="input-wrap">
+                <span class="ico">👤</span>
+                <input
+                  formControlName="last_name2"
+                  placeholder="Segundo apellido"
+                  [class.invalid]="f['last_name2'].touched && f['last_name2'].invalid"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección 3 -->
+        <div class="section">
+          <div class="legend"><span class="dot"></span> <span>Contacto</span></div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label class="label">Edad</label>
+              <div class="input-wrap">
+                <span class="ico">🎂</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="120"
+                  formControlName="age"
+                  placeholder="Ej: 28"
+                  [class.invalid]="f['age'].touched && f['age'].invalid"
+                />
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label">Teléfono</label>
+              <div class="input-wrap">
+                <span class="ico">📞</span>
+                <input
+                  formControlName="phone"
+                  inputmode="tel"
+                  placeholder="Ej: 3001234567"
+                  [class.invalid]="f['phone'].touched && f['phone'].invalid"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Email</label>
+            <div class="input-wrap">
+              <span class="ico">✉️</span>
+              <input
+                type="email"
+                autocomplete="email"
+                inputmode="email"
+                formControlName="email"
+                placeholder="tucorreo@ejemplo.com"
+                [class.invalid]="f['email'].touched && f['email'].invalid"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección 4 -->
+        <div class="section">
+          <div class="legend"><span class="dot"></span> <span>Seguridad</span></div>
+
+          <div class="field">
+            <label class="label">Contraseña</label>
+            <div class="input-wrap">
+              <span class="ico">🔒</span>
+              <input
+                [type]="pwVisible ? 'text' : 'password'"
+                placeholder="Mín. 8, 1 mayúscula, 1 número y 1 símbolo de @$!%*?&"
+                formControlName="password"
+                [class.invalid]="f['password'].touched && f['password'].invalid"
+                autocomplete="new-password"
+              />
+              <button
+                type="button"
+                class="pw-toggle"
+                (click)="togglePw()"
+                [attr.aria-pressed]="pwVisible"
+              >
+                <span *ngIf="!pwVisible" aria-hidden="true">👁️</span>
+                <span *ngIf="pwVisible" aria-hidden="true">🙈</span>
+              </button>
+            </div>
+
+            <div class="strength" *ngIf="f['password'].value">
+              <div class="strength-bar"><span [style.width.%]="passwordStrength.score"></span></div>
+              <span class="strength-badge">{{ passwordStrength.label }}</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Confirmar contraseña</label>
+            <div class="input-wrap">
+              <span class="ico">✅</span>
+              <input
+                [type]="cpwVisible ? 'text' : 'password'"
+                placeholder="Repite tu contraseña"
+                formControlName="confirmPassword"
+                [class.invalid]="
+                  form.hasError('passwordsMismatch') && (confirm.touched || confirm.dirty)
+                "
+                autocomplete="new-password"
+              />
+              <button
+                type="button"
+                class="pw-toggle"
+                (click)="toggleCpw()"
+                [attr.aria-pressed]="cpwVisible"
+              >
+                <span *ngIf="!cpwVisible" aria-hidden="true">👁️</span>
+                <span *ngIf="cpwVisible" aria-hidden="true">🙈</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button [disabled]="loading || form.invalid" aria-busy="{{ loading }}">
+            <span *ngIf="loading" class="spinner" aria-hidden="true"></span>
+            <span *ngIf="!loading">Registrarme</span>
+            <span *ngIf="loading">Creando cuenta…</span>
+          </button>
+        </div>
+
+        <div class="banner ok" *ngIf="msg" aria-live="polite">{{ msg }}</div>
+        <div class="banner err" *ngIf="error" aria-live="assertive">{{ error }}</div>
+      </form>
+    </div>
   </div>
-  <p *ngIf="f['_id'].touched && f['_id'].invalid" style="color:red">
-    ID inválido (usa 5–30 caracteres: letras, números, “- _ .”).
-  </p>
-  <p *ngIf="f['document_type'].touched && f['document_type'].invalid" style="color:red">
-    Selecciona el tipo de documento.
-  </p>
-
-  <div class="row">
-    <input placeholder="Nombre(s)" formControlName="name" />
-  </div>
-  <div class="row">
-    <input placeholder="Primer apellido" formControlName="last_name1" />
-    <input placeholder="Segundo apellido" formControlName="last_name2" />
-  </div>
-  <p *ngIf="(f['name'].touched && f['name'].invalid) ||
-            (f['last_name1'].touched && f['last_name1'].invalid) ||
-            (f['last_name2'].touched && f['last_name2'].invalid)"
-     style="color:red">Nombre y apellidos son obligatorios.</p>
-
-  <div class="row">
-    <input type="number" placeholder="Edad" formControlName="age" />
-    <input placeholder="Teléfono" formControlName="phone" />
-  </div>
-  <p *ngIf="f['age'].touched && f['age'].invalid" style="color:red">Edad inválida (1–120).</p>
-  <p *ngIf="f['phone'].touched && f['phone'].invalid" style="color:red">Teléfono inválido (7–15 dígitos).</p>
-
-  <input placeholder="Email" type="email" formControlName="email" />
-  <p *ngIf="f['email'].touched && f['email'].invalid" style="color:red">Correo inválido.</p>
-
-  <input
-    placeholder="Contraseña (mín. 8, símbolo de @$!%*?&)"
-    type="password"
-    formControlName="password"
-    autocomplete="new-password"
-  />
-  <p *ngIf="passwordErrors" style="color:red">{{ passwordErrors }}</p>
-
-  <input
-    placeholder="Confirmar contraseña"
-    type="password"
-    formControlName="confirmPassword"
-    autocomplete="new-password"
-  />
-  <p *ngIf="form.hasError('passwordsMismatch') && (confirm.touched || confirm.dirty)"
-     style="color:red">Las contraseñas no coinciden</p>
-
-  <button [disabled]="loading || form.invalid">Registrarme</button>
-
-  <p *ngIf="msg" style="color:green">{{ msg }}</p>
-  <p *ngIf="error" style="color:red">{{ error }}</p>
-</form>
+</section>

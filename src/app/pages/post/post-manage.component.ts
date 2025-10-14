@@ -9,7 +9,9 @@ import { decodeJwt } from '../../core/utils/jwt';
 
 type Post = {
   _id: string;
-  psychologist_id: string | { _id: string; name?: string; last_name1?: string; last_name2?: string };
+  psychologist_id:
+    | string
+    | { _id: string; name?: string; last_name1?: string; last_name2?: string };
   title: string;
   content: string;
   active: boolean;
@@ -51,7 +53,9 @@ export class PostManageComponent {
     active: [true],
   });
 
-  get isBrowser() { return isPlatformBrowser(this.platformId); }
+  get isBrowser() {
+    return isPlatformBrowser(this.platformId);
+  }
 
   ngOnInit(): void {
     this.resolveMeId();
@@ -85,7 +89,10 @@ export class PostManageComponent {
   }
 
   private resolveMeId() {
-    if (!this.isBrowser) { this.meId = null; return; }
+    if (!this.isBrowser) {
+      this.meId = null;
+      return;
+    }
     const token = this.userSvc.getToken?.() ?? (localStorage.getItem('token') || null);
     this.meId = this.extractIdFromJwt(token);
   }
@@ -106,22 +113,28 @@ export class PostManageComponent {
   fetch() {
     this.loading = true;
     this.err = null;
-    this.svc.getPosts()
+    this.svc
+      .getPosts()
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (res: any) => {
           // el back puede devolver array directo o {posts:[...]}
-          const list: Post[] = Array.isArray(res) ? res : (res?.posts ?? []);
+          const list: Post[] = Array.isArray(res) ? res : res?.posts ?? [];
           this.posts = list;
         },
-        error: () => { this.err = 'No se pudieron cargar los artículos.'; },
+        error: () => {
+          this.err = 'No se pudieron cargar los artículos.';
+        },
       });
   }
 
   // ========= acciones =========
   create() {
     if (!this.isBrowser) return;
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
     this.saving = true;
     this.err = null;
@@ -133,7 +146,8 @@ export class PostManageComponent {
       active: !!this.form.value.active,
     };
 
-    this.svc.createPost(payload)
+    this.svc
+      .createPost(payload)
       .pipe(finalize(() => (this.saving = false)))
       .subscribe({
         next: () => {
@@ -152,35 +166,33 @@ export class PostManageComponent {
   toggleActive(p: Post) {
     if (!this.isOwner(p)) return;
     const next = !p.active;
-    this.svc.updatePost(p._id, { active: next })
-      .subscribe({
-        next: () => {
-          p.active = next;
-          this.msg = next ? 'Artículo activado.' : 'Artículo desactivado.';
-        },
-        error: (e) => {
-          if (e?.status === 401) this.err = 'No autorizado. Inicia sesión de nuevo.';
-          else if (e?.status === 403) this.err = 'No puedes modificar este artículo.';
-          else this.err = e?.error?.message || 'No se pudo actualizar el artículo.';
-        },
-      });
+    this.svc.updatePost(p._id, { active: next }).subscribe({
+      next: () => {
+        p.active = next;
+        this.msg = next ? 'Artículo activado.' : 'Artículo desactivado.';
+      },
+      error: (e) => {
+        if (e?.status === 401) this.err = 'No autorizado. Inicia sesión de nuevo.';
+        else if (e?.status === 403) this.err = 'No puedes modificar este artículo.';
+        else this.err = e?.error?.message || 'No se pudo actualizar el artículo.';
+      },
+    });
   }
 
   remove(p: Post) {
     if (!this.isOwner(p)) return;
     if (this.isBrowser && !confirm('¿Eliminar este artículo?')) return;
 
-    this.svc.deletePost(p._id)
-      .subscribe({
-        next: () => {
-          this.posts = this.posts.filter(x => x._id !== p._id);
-          this.msg = 'Artículo eliminado.';
-        },
-        error: (e) => {
-          if (e?.status === 401) this.err = 'No autorizado. Inicia sesión de nuevo.';
-          else if (e?.status === 403) this.err = 'No puedes eliminar este artículo.';
-          else this.err = e?.error?.message || 'No se pudo eliminar el artículo.';
-        },
-      });
+    this.svc.deletePost(p._id).subscribe({
+      next: () => {
+        this.posts = this.posts.filter((x) => x._id !== p._id);
+        this.msg = 'Artículo eliminado.';
+      },
+      error: (e) => {
+        if (e?.status === 401) this.err = 'No autorizado. Inicia sesión de nuevo.';
+        else if (e?.status === 403) this.err = 'No puedes eliminar este artículo.';
+        else this.err = e?.error?.message || 'No se pudo eliminar el artículo.';
+      },
+    });
   }
 }

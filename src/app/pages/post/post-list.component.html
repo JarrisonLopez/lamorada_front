@@ -8,7 +8,7 @@
     <h3>{{ p.title }}</h3>
     <p class="meta">
       <span *ngIf="authorName(p)">por {{ authorName(p) }}</span>
-      <span *ngIf="p.created_at"> • {{ p.created_at | date:'medium' }}</span>
+      <span *ngIf="p.created_at"> • {{ p.created_at | date : 'medium' }}</span>
       <span *ngIf="p.active === false" class="inactive"> • inactiva</span>
     </p>
     <p class="content">{{ p.content }}</p>

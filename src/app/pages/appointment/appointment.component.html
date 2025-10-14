@@ -1,30 +1,156 @@
-<section class="box">
-  <h2>Agendar cita</h2>
+<section class="page">
+  <!-- Encabezado + progreso -->
+  <header class="hero">
+    <div>
+      <h2>Agendar cita</h2>
+      <p class="muted">
+        Elige una fecha y hora. Para hoy, la hora mínima se ajusta a los próximos 15 minutos.
+      </p>
+    </div>
 
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <label>Fecha
-      <input type="date" formControlName="date" [min]="minDate">
-    </label>
+    <div class="steps" aria-hidden="true">
+      <div class="step done"><span>1</span> Fecha & hora</div>
+      <div class="divider"></div>
+      <div class="step"><span>2</span> Profesional</div>
+      <div class="divider"></div>
+      <div class="step"><span>3</span> Confirmar</div>
+    </div>
+  </header>
 
-    <label>Hora
-      <!-- El [min] se ajusta dinámicamente: hoy ⇒ próximos 15 min; otro día ⇒ 00:00 -->
-      <input type="time" formControlName="time" step="900" [min]="minTime">
-    </label>
+  <!-- Mensajes -->
+  <p *ngIf="err" class="msg err" aria-live="assertive">{{ err }}</p>
+  <p *ngIf="msg" class="msg ok" aria-live="polite">{{ msg }}</p>
 
-    <label>Psicólogo (opcional)
-      <select formControlName="psychologist_id">
-        <option value="">Cualquiera</option>
-        <option *ngFor="let p of psychologists" [value]="p._id">{{ p.name }}</option>
-      </select>
-    </label>
+  <!-- CONTENIDO: 2 columnas -->
+  <div class="grid">
+    <!-- Columna izquierda: FORM -->
+    <form class="card form" [formGroup]="form" (ngSubmit)="submit()">
+      <!-- Atajos -->
+      <div class="chips">
+        <button type="button" class="chip" (click)="pickToday()">Hoy</button>
+        <button type="button" class="chip" (click)="pickTomorrow()">Mañana</button>
+      </div>
 
-    <label>Notas (opcional)
-      <textarea formControlName="notes" placeholder="Motivo de la consulta"></textarea>
-    </label>
+      <div class="row">
+        <!-- Fecha -->
+        <label class="field">
+          <span class="label">Fecha</span>
+          <div class="input with-icon">
+            <span class="icon calendar" aria-hidden="true"></span>
+            <input
+              type="date"
+              formControlName="date"
+              [min]="minDate"
+              [class.invalid]="form.get('date')?.touched && form.get('date')?.invalid"
+              aria-label="Fecha de la cita"
+            />
+          </div>
+          <small
+            class="field-err"
+            *ngIf="form.get('date')?.touched && form.get('date')?.hasError('required')"
+          >
+            La fecha es obligatoria.
+          </small>
+        </label>
 
-    <button type="submit" [disabled]="loading">Crear cita</button>
-  </form>
+        <!-- Hora -->
+        <label class="field">
+          <span class="label">Hora</span>
+          <div class="input with-icon">
+            <span class="icon clock" aria-hidden="true"></span>
+            <input
+              type="time"
+              formControlName="time"
+              step="900"
+              [min]="minTime"
+              [class.invalid]="form.get('time')?.touched && form.get('time')?.invalid"
+              aria-label="Hora de la cita"
+            />
+          </div>
+          <small class="hint"
+            >Mínimo permitido: <strong>{{ minTime }}</strong> para la fecha seleccionada.</small
+          >
+          <small
+            class="field-err"
+            *ngIf="form.get('time')?.touched && form.get('time')?.hasError('required')"
+          >
+            La hora es obligatoria.
+          </small>
+        </label>
+      </div>
 
-  <p *ngIf="err" style="color:#c00">{{ err }}</p>
-  <p *ngIf="msg" style="color:green">{{ msg }}</p>
+      <!-- Psicólogo -->
+      <label class="field">
+        <span class="label">Psicólogo (opcional)</span>
+        <div class="input with-icon">
+          <span class="icon user" aria-hidden="true"></span>
+          <select formControlName="psychologist_id" aria-label="Seleccionar psicólogo">
+            <option value="">Cualquiera</option>
+            <option *ngFor="let p of psychologists" [value]="p._id">{{ p.name }}</option>
+          </select>
+        </div>
+        <small class="hint"
+          >Si no eliges a nadie, te asignaremos el primer profesional disponible.</small
+        >
+      </label>
+
+      <!-- Notas -->
+      <label class="field">
+        <span class="label">Notas (opcional)</span>
+        <textarea
+          formControlName="notes"
+          rows="4"
+          placeholder="Motivo de la consulta, objetivos, observaciones…"
+          aria-label="Notas de la cita"
+        ></textarea>
+      </label>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary" [disabled]="loading || form.invalid">
+          {{ loading ? 'Creando…' : 'Crear cita' }}
+        </button>
+      </div>
+    </form>
+
+    <!-- Columna derecha: RESUMEN -->
+    <aside class="aside">
+      <div class="summary card">
+        <h3>Resumen</h3>
+
+        <div class="summary-row">
+          <span class="icon calendar"></span>
+          <div>
+            <small class="muted">Fecha</small>
+            <div class="val">{{ previewDate() || '—' }}</div>
+          </div>
+        </div>
+
+        <div class="summary-row">
+          <span class="icon clock"></span>
+          <div>
+            <small class="muted">Hora</small>
+            <div class="val">{{ previewTime() || '—' }}</div>
+          </div>
+        </div>
+
+        <div class="summary-row">
+          <span class="icon user"></span>
+          <div>
+            <small class="muted">Profesional</small>
+            <div class="val">{{ psychName() }}</div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <ul class="bullets">
+          <li>Duración estimada: 50 min</li>
+          <li>Reunión por videollamada o presencial*</li>
+          <li>Recibirás recordatorio por email</li>
+        </ul>
+
+        <small class="muted note">* La modalidad exacta se confirma con el profesional.</small>
+      </div>
+    </aside>
+  </div>
 </section>

@@ -1,63 +1,82 @@
-<div *ngIf="loading">Cargando...</div>
-<p *ngIf="err" style="color:#c00">{{ err }}</p>
-<p *ngIf="msg" style="color:green">{{ msg }}</p>
+<section class="wrap">
+  <!-- Encabezado -->
+  <div class="cart-head">
+    <h2>Tu carrito</h2>
+    <small *ngIf="!loading && items.length">{{ items.length }} producto(s)</small>
+  </div>
 
-<table *ngIf="!loading && items.length > 0" class="cart">
-  <thead>
-    <tr>
-      <th>Producto</th>
-      <th class="right">Precio</th>
-      <th class="center">Cantidad</th>
-      <th class="right">Subtotal</th>
-      <th></th>
-    </tr>
-  </thead>
+  <!-- Mensajes -->
+  <div *ngIf="loading">Cargando…</div>
+  <p *ngIf="err" class="err" aria-live="assertive">{{ err }}</p>
+  <p *ngIf="msg" class="msg" aria-live="polite">{{ msg }}</p>
 
-  <tbody>
-    <tr *ngFor="let it of items">
-      <td class="prod">
-        <img *ngIf="coverOf(it)" [src]="coverOf(it)" alt="cover" />
-        <span>{{ titleOf(it) || idOf(it) }}</span>
-      </td>
+  <!-- Tabla -->
+  <div class="table-wrap" *ngIf="!loading && items.length > 0">
+    <table class="cart" role="table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th class="right">Precio</th>
+          <th class="center">Cantidad</th>
+          <th class="right">Subtotal</th>
+          <th class="center" aria-label="Acciones"></th>
+        </tr>
+      </thead>
 
-      <td class="right">
-        {{ priceOf(it) | currency:'USD':'symbol' }}
-      </td>
+      <tbody>
+        <tr *ngFor="let it of items">
+          <!-- Producto -->
+          <td class="prod">
+            <img *ngIf="coverOf(it)" [src]="coverOf(it)" alt="Portada del producto" />
+            <span>{{ titleOf(it) || idOf(it) }}</span>
+          </td>
 
-      <td class="center">
-        <div class="qty">
-          <button type="button" (click)="dec(it)">−</button>
-          <input type="number"
-                 [value]="it.quantity"
-                 min="1"
-                 (change)="onQtyChange(it, $any($event.target).value)" />
-          <button type="button" (click)="inc(it)">+</button>
-        </div>
-      </td>
+          <!-- Precio unitario -->
+          <td class="right">
+            {{ priceOf(it) | currency : 'USD' : 'symbol' }}
+          </td>
 
-      <td class="right">
-        {{ (priceOf(it) * (it.quantity || 1)) | currency:'USD':'symbol' }}
-      </td>
+          <!-- Cantidad -->
+          <td class="center">
+            <div class="qty" aria-label="Control de cantidad">
+              <button type="button" (click)="dec(it)" aria-label="Disminuir">−</button>
+              <input
+                type="number"
+                [value]="it.quantity"
+                min="1"
+                (change)="onQtyChange(it, $any($event.target).value)"
+              />
+              <button type="button" (click)="inc(it)" aria-label="Aumentar">+</button>
+            </div>
+          </td>
 
-      <td class="center">
-        <button type="button" class="link" (click)="remove(it)">Eliminar</button>
-      </td>
-    </tr>
-  </tbody>
+          <!-- Subtotal -->
+          <td class="right">
+            {{ priceOf(it) * (it.quantity || 1) | currency : 'USD' : 'symbol' }}
+          </td>
 
-  <tfoot>
-    <tr>
-      <th colspan="3" class="right">Total</th>
-      <th class="right">{{ total | currency:'USD':'symbol' }}</th>
-      <th></th>
-    </tr>
-  </tfoot>
-</table>
+          <!-- Eliminar -->
+          <td class="center">
+            <button type="button" class="link" (click)="remove(it)">Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
 
-<div *ngIf="!loading && items.length === 0">
-  <p>No tienes productos en el carrito.</p>
-</div>
+      <tfoot>
+        <tr>
+          <th colspan="3" class="right total">Total</th>
+          <th class="right total">{{ total | currency : 'USD' : 'symbol' }}</th>
+          <th></th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
 
-<div class="actions" *ngIf="!loading && items.length > 0">
-  <button type="button" (click)="clear()">Vaciar carrito</button>
-</div>
+  <!-- Vacío -->
+  <div class="empty" *ngIf="!loading && items.length === 0">No tienes productos en el carrito.</div>
+
+  <!-- Acciones -->
+  <div class="actions" *ngIf="!loading && items.length > 0">
+    <button type="button" class="btn btn-primary" (click)="clear()">Vaciar carrito</button>
+  </div>
+</section>

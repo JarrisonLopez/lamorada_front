@@ -1,4 +1,4 @@
-import { Component, PLATFORM_ID, signal, inject } from '@angular/core';
+import { Component, PLATFORM_ID, signal, inject, computed } from '@angular/core';
 import { CommonModule, DatePipe, isPlatformBrowser } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { finalize, firstValueFrom } from 'rxjs';
@@ -18,6 +18,8 @@ type Podcast = {
   createdAt?: string | Date;
 };
 
+type SortKey = 'new' | 'old' | 'title';
+
 @Component({
   standalone: true,
   selector: 'app-podcast',
@@ -32,13 +34,44 @@ export class PodcastComponent {
   private userSvc = inject(UserService);
 
   loading = signal(false);
-  saving  = signal(false);
-  err     = signal<string | null>(null);
-  msg     = signal<string | null>(null);
+  saving = signal(false);
+  err = signal<string | null>(null);
+  msg = signal<string | null>(null);
 
   podcasts = signal<Podcast[]>([]);
-  isPsych  = signal<boolean>(false);
-  tab      = signal<'list'|'create'>('list');
+  isPsych = signal<boolean>(false);
+  tab = signal<'list' | 'create'>('list');
+
+  /** filtros UI */
+  q = signal<string>(''); // búsqueda
+  sort = signal<SortKey>('new'); // ordenar
+
+  /** lista filtrada y ordenada */
+  filtered = computed(() => {
+    const q = this.q().toLowerCase().trim();
+    let list = this.podcasts();
+
+    if (q) {
+      list = list.filter(
+        (p) =>
+          (p.title || '').toLowerCase().includes(q) ||
+          (p.description || '').toLowerCase().includes(q) ||
+          (p.creator_name || '').toLowerCase().includes(q)
+      );
+    }
+
+    const s = this.sort();
+    list = [...list].sort((a, b) => {
+      if (s === 'title') {
+        return (a.title || '').localeCompare(b.title || '');
+      }
+      const da = new Date(a.createdAt || 0).getTime();
+      const db = new Date(b.createdAt || 0).getTime();
+      return s === 'old' ? da - db : db - da; // por defecto 'new'
+    });
+
+    return list;
+  });
 
   /** id del usuario autenticado para comprobar autoría */
   meId: string | null = null;
@@ -49,7 +82,9 @@ export class PodcastComponent {
     youtube: ['', [Validators.required]],
   });
 
-  get isBrowser() { return isPlatformBrowser(this.platformId); }
+  get isBrowser() {
+    return isPlatformBrowser(this.platformId);
+  }
 
   async ngOnInit() {
     await this.resolveIdentityAndRole();
@@ -58,20 +93,16 @@ export class PodcastComponent {
 
   private async resolveIdentityAndRole() {
     if (!this.isBrowser) return;
-
-    // 1) JWT rápido
     try {
       const t = this.userSvc.getToken();
       if (t) {
         const p: any = decodeJwt(t);
         const role = p?.role || p?.user?.role;
-        const id   = p?.id || p?._id || p?.user?._id || p?.user?.id;
+        const id = p?.id || p?._id || p?.user?._id || p?.user?.id;
         if (role === 'psychologist') this.isPsych.set(true);
         if (id) this.meId = String(id);
       }
     } catch {}
-
-    // 2) Fuente de verdad
     if (!this.meId || !this.isPsych()) {
       try {
         const me = await firstValueFrom(this.userSvc.getMe());
@@ -85,8 +116,8 @@ export class PodcastComponent {
     if (!this.isBrowser) return;
     this.loading.set(true);
     this.err.set(null);
-
-    this.svc.getPodcasts()
+    this.svc
+      .getPodcasts()
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (res) => this.podcasts.set(res || []),
@@ -94,12 +125,14 @@ export class PodcastComponent {
       });
   }
 
-  toTab(t: 'list'|'create') { this.tab.set(t); }
+  toTab(t: 'list' | 'create') {
+    this.tab.set(t);
+  }
 
-  /** URL de embed; el pipe SafeUrl la marcará como segura */
+  /** URL de embed; estilo limpio */
   buildEmbedUrl(id: string): string {
     const safe = String(id || '').replace(/[^a-zA-Z0-9_-]/g, '');
-    return `https://www.youtube.com/embed/${safe}`;
+    return `https://www.youtube.com/embed/${safe}?modestbranding=1&rel=0&color=white`;
   }
 
   private extractYouTubeId(input: string): string {
@@ -109,12 +142,15 @@ export class PodcastComponent {
       const u = new URL(raw);
       const v = u.searchParams.get('v');
       if (v) return v;
-      if (u.hostname.includes('youtu') && u.pathname.length > 1) return u.pathname.slice(1);
+      if (u.hostname.includes('youtu') && u.pathname.length > 1) {
+        return u.pathname.replace(/^\/(shorts\/)?/, '');
+      }
       return raw;
-    } catch { return raw; }
+    } catch {
+      return raw;
+    }
   }
 
-  /** El autor es quien tiene creator_id == meId */
   isOwner(p: Podcast): boolean {
     const ownerId = p?.creator_id ? String(p.creator_id) : null;
     return !!(this.meId && ownerId && ownerId === this.meId);
@@ -122,7 +158,10 @@ export class PodcastComponent {
 
   create() {
     if (!this.isBrowser) return;
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
     this.saving.set(true);
     this.err.set(null);
@@ -131,7 +170,8 @@ export class PodcastComponent {
     const { title, description, youtube } = this.form.value;
     const youtubeId = this.extractYouTubeId(youtube);
 
-    this.svc.createPodcast({ title, description, youtubeId })
+    this.svc
+      .createPodcast({ title, description, youtubeId })
       .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: () => {
@@ -149,23 +189,37 @@ export class PodcastComponent {
       });
   }
 
-  /** Eliminar (solo autor). Muestra mensaje claro si 403. */
   remove(p: Podcast) {
     if (!this.isOwner(p)) return;
     if (!confirm(`¿Eliminar el podcast "${p.title}"?`)) return;
 
     this.loading.set(true);
-    this.err.set(null); this.msg.set(null);
+    this.err.set(null);
+    this.msg.set(null);
 
-    this.svc.deletePodcast(p._id)
+    this.svc
+      .deletePodcast(p._id)
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: () => { this.msg.set('Podcast eliminado.'); this.fetch(); },
+        next: () => {
+          this.msg.set('Podcast eliminado.');
+          this.fetch();
+        },
         error: (e) => {
           if (e?.status === 401) this.err.set('No autenticado.');
-          else if (e?.status === 403) this.err.set('No autorizado: solo el autor puede eliminarlo.');
+          else if (e?.status === 403)
+            this.err.set('No autorizado: solo el autor puede eliminarlo.');
           else this.err.set(e?.error?.message || 'No se pudo eliminar el podcast.');
-        }
+        },
       });
+  }
+
+  /* ========= Handlers de la toolbar ========= */
+  onQueryInput(ev: Event) {
+    this.q.set((ev.target as HTMLInputElement).value);
+  }
+  onSortChange(ev: Event) {
+    const value = (ev.target as HTMLSelectElement).value as SortKey;
+    this.sort.set(value);
   }
 }
