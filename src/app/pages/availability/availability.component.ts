@@ -1,156 +1,62 @@
-import { Component, Inject, OnInit, PLATFORM_ID, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, NgIf, NgFor, isPlatformBrowser } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { AvailabilityService } from '../../services/availability.service';
-import { firstValueFrom } from 'rxjs';
-
-type Slot = { start: string; end: string };
-type AvailabilityDoc = { _id?: string; days: string[]; slots: Slot[] };
-
-const WEEK_DAYS = [
-  { key: 'monday',    label: 'Lunes' },
-  { key: 'tuesday',   label: 'Martes' },
-  { key: 'wednesday', label: 'Miércoles' },
-  { key: 'thursday',  label: 'Jueves' },
-  { key: 'friday',    label: 'Viernes' },
-  { key: 'saturday',  label: 'Sábado' },
-  { key: 'sunday',    label: 'Domingo' },
-];
+import { AvailabilityDoc } from '../../models/availability.model';
+import { EN2ES, WEEKDAYS_EN, normDayKey } from '../../shared/day-utils';
+import { UserService } from '../../services/user.service';
 
 @Component({
-  selector: 'app-availability-view',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  selector: 'app-availability',
+  imports: [CommonModule, NgIf, NgFor, RouterLink],
   templateUrl: './availability.component.html',
   styleUrls: ['./availability.component.css'],
 })
-export class AvailabilityViewComponent implements OnInit {
-  private fb = inject(FormBuilder);
+export class AvailabilityComponent {
+  constructor(
+    private avSrv: AvailabilityService,
+    private userSrv: UserService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
-  loading = false;
-  msg: string | null = null;
-  err: string | null = null;
+  loading = true;
+  doc: AvailabilityDoc | null = null;
+  role: 'patient' | 'psychologist' | null = null;
 
-  docId: string | null = null;
-  days = WEEK_DAYS;
+  get isBrowser() { return isPlatformBrowser(this.platformId); }
 
-  form: FormGroup = this.fb.group({
-    days: this.fb.control<string[]>([], { validators: [Validators.required] }),
-    slots: this.fb.array<FormGroup>([])
-  });
+  ngOnInit() {
+    // Lee rol desde storage/JWT sin pegarle al back
+    this.role = (this.userSrv.getRole() as any) ?? null;
 
-  constructor(private availability: AvailabilityService) {}
+    if (!this.isBrowser) { this.loading = false; return; }
 
-  ngOnInit(): void {
-    this.load();
-    if (this.slotsFA.length === 0) this.addSlot({ start: '09:00', end: '10:00' });
-  }
-
-  // helpers
-  get slotsFA(): FormArray<FormGroup> {
-    return this.form.get('slots') as FormArray<FormGroup>;
-  }
-  slotGroupAt(i: number): FormGroup {
-    return this.slotsFA.at(i) as FormGroup;
-  }
-  trackSlot = (i: number) => i;
-
-  addSlot(initial?: Slot) {
-    const g = this.fb.group({
-      start: this.fb.control<string>(initial?.start ?? '09:00', { nonNullable: true, validators: [Validators.required] }),
-      end:   this.fb.control<string>(initial?.end   ?? '10:00', { nonNullable: true, validators: [Validators.required] }),
+    // GET /availability (solo disponible para psicólogo; si 401/403 mostramos mensaje)
+    this.avSrv.getAvailability().subscribe({
+      next: d => this.doc = d ?? null,
+      error: _ => this.doc = null,
+      complete: () => this.loading = false
     });
-    this.slotsFA.push(g);
   }
 
-  removeSlot(i: number) {
-    this.slotsFA.removeAt(i);
+  /** Normaliza cualquier entrada (ES con/sin tildes o EN) a EN y la ordena Monday..Sunday */
+  get orderedDaysEn(): string[] {
+    const raw = this.doc?.days ?? [];
+    const norm = raw.map(normDayKey); // -> monday..sunday o deja tal cual si ya es EN
+    const set = new Set(norm.map(d => d.toLowerCase()));
+    return WEEKDAYS_EN.filter(d => set.has(d));
   }
 
-  toggleDay(dayKey: string, checked: boolean) {
-    const current = [...(this.form.value.days || [])];
-    const next = checked ? Array.from(new Set([...current, dayKey])) : current.filter(d => d !== dayKey);
-    this.form.get('days')!.setValue(next);
+  /** Etiqueta en ES con tildes para mostrar */
+  labelDay(en: string) { return EN2ES[en] ?? en; }
+
+  /** “Lunes, Martes, …” */
+  daysJoined(): string {
+    return this.orderedDaysEn.map(d => this.labelDay(d)).join(', ');
   }
 
-  async load() {
-    this.loading = true;
-    this.msg = null;
-    this.err = null;
-    try {
-      const resp = await firstValueFrom(this.availability.getAvailability());
-      const docs: AvailabilityDoc[] = Array.isArray(resp) ? resp : (resp?.items ?? []);
-      const one = docs?.[0] ?? null;
-
-      while (this.slotsFA.length) this.slotsFA.removeAt(0);
-
-      if (one) {
-        this.docId = one._id ?? null;
-        this.form.patchValue({ days: one.days ?? [] });
-        (one.slots ?? []).forEach(s => this.addSlot(s));
-      } else {
-        this.docId = null;
-        this.form.patchValue({ days: [] });
-        this.addSlot({ start: '09:00', end: '10:00' });
-      }
-    } catch (e: any) {
-      this.err = (e?.status === 401 || e?.status === 403)
-        ? 'Tu cuenta no tiene permisos para ver/editar la disponibilidad.'
-        : (e?.error?.message || 'Error al cargar disponibilidad');
-    } finally {
-      this.loading = false;
-    }
-  }
-
-  private validateSlots(): string | null {
-    const slots: Slot[] = this.slotsFA.controls.map(c => ({
-      start: c.get('start')!.value,
-      end:   c.get('end')!.value
-    }));
-    for (const s of slots) {
-      if (!s.start || !s.end) return 'Todos los intervalos deben tener hora inicial y final.';
-      if (s.end <= s.start) return 'Cada intervalo debe terminar después de su inicio.';
-    }
-    return null;
-  }
-
-  async save() {
-    this.msg = null;
-    this.err = null;
-
-    if (this.form.invalid) { this.err = 'Completa los campos requeridos.'; return; }
-    const slotErr = this.validateSlots(); if (slotErr) { this.err = slotErr; return; }
-
-    const payload: AvailabilityDoc = {
-      days: this.form.value.days ?? [],
-      slots: (this.form.value.slots ?? []) as Slot[],
-    };
-
-    this.loading = true;
-    try {
-      await firstValueFrom(this.availability.upsertAvailability(payload));
-      this.msg = 'Disponibilidad guardada.';
-      await this.load();
-    } catch (e: any) {
-      this.err = e?.error?.message || 'No se pudo guardar la disponibilidad';
-    } finally {
-      this.loading = false;
-    }
-  }
-
-  async delete() {
-    if (!this.docId) return;
-    this.loading = true;
-    this.msg = null;
-    this.err = null;
-    try {
-      await firstValueFrom(this.availability.deleteAvailability(this.docId));
-      this.msg = 'Disponibilidad eliminada.';
-      await this.load();
-    } catch (e: any) {
-      this.err = e?.error?.message || 'No se pudo eliminar la disponibilidad';
-    } finally {
-      this.loading = false;
-    }
+  hasData(): boolean {
+    return !!(this.doc?.days?.length && this.doc?.slots?.length);
   }
 }

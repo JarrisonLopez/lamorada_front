@@ -1,1 +1,230 @@
-.form { display:grid; gap:.5rem; max-width:420px; }
+/* Layout base */
+.wrap {
+  max-width: 1100px;
+  margin: 20px auto 80px;
+  padding: 0 16px;
+}
+
+h2 {
+  margin: 0 0 6px;
+  font-weight: 700;
+  color: #2a173d;
+}
+
+.subtitle {
+  margin: 0 0 10px;
+  color: #7a679e;
+  font-size: 14px;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 10px 0 16px;
+  position: relative;
+  z-index: 2;
+}
+
+.toolbar input[type='search'] {
+  flex: 1;
+  min-width: 260px;
+  padding: 10px 12px;
+  border: 1px solid #e8def8;
+  border-radius: 12px;
+  background: #fbf8ff;
+  color: #2a173d;
+  outline: none;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  font-size: 14px;
+}
+
+.toolbar input[type='search']::placeholder {
+  color: #a393c7;
+}
+
+.toolbar input[type='search']:focus {
+  border-color: #cbb4ff;
+  box-shadow: 0 0 0 4px rgba(143, 107, 255, 0.18);
+}
+
+.toolbar .link {
+  padding: 10px 14px;
+  border: 1px solid #d7c8ff;
+  background: #f3edff;
+  color: #5b32c8;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.12s ease;
+  font-size: 14px;
+}
+
+.toolbar .link:hover {
+  box-shadow: 0 8px 18px rgba(143, 107, 255, 0.26);
+  transform: translateY(-1px);
+}
+.toolbar .link:active {
+  transform: translateY(0);
+}
+
+/* Tarjetas genéricas */
+.card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 6px 28px rgba(143, 107, 255, 0.16);
+  font-size: 15px;
+}
+.card.muted {
+  color: #666;
+}
+.card.error {
+  background: #fff1f1;
+  border-color: #fca5a5;
+}
+
+/* Grilla de perfiles
+   -> aumentamos el ancho mínimo de cada tarjeta para ayudar al email a respirar */
+.grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 18px;
+}
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+@media (max-width: 680px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tarjeta de psicólogo */
+.psy {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: #ffffff;
+  border: 1px solid #f1ebff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(143, 107, 255, 0.12);
+  transition: transform 0.08s ease, box-shadow 0.12s ease;
+}
+
+.psy:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 34px rgba(143, 107, 255, 0.18);
+}
+
+/* Avatar */
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4a2a84;
+  font-weight: 800;
+  border: 1px solid #eadcff;
+  background: radial-gradient(120px 50px at top right, #f9f3ff 10%, transparent 35%),
+    radial-gradient(100px 60px at bottom left, #f2ecff 15%, transparent 40%), #ffffff;
+  box-shadow: 0 0 0 7px rgba(143, 107, 255, 0.08) inset, 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Info */
+.info h3 {
+  margin: 0 0 8px;
+  color: #2a173d;
+  font-size: 18px; /* título más grande */
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+/* Tabla label / value */
+.rows {
+  display: grid;
+  grid-template-columns: 110px 1fr; /* un poco más para el label */
+  gap: 8px 12px; /* más separación */
+  align-items: center;
+}
+
+.label {
+  color: #7c6aa5;
+  font-size: 14px; /* subimos tamaño de label */
+  line-height: 1.5;
+}
+
+.value {
+  color: #2a173d;
+  font-size: 15px; /* subimos tamaño de valor */
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* Enlaces de email: que envuelvan y no se salgan */
+.value a {
+  color: #4527a0;
+  text-decoration: none;
+  border-bottom: 1px dashed #cbb4ff;
+  display: inline-block;
+  max-width: 100%;
+  white-space: normal; /* permitir varias líneas */
+  overflow-wrap: anywhere; /* envolver en cualquier punto si es largo */
+  word-break: break-word; /* romper palabras largas si hace falta */
+}
+.value a:hover {
+  color: #5b32c8;
+  border-bottom-color: #5b32c8;
+}
+
+/* Chips/pastillas */
+.pill {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid #e1d6ff;
+  background: #f7f3ff;
+  color: #5b32c8;
+}
+
+/* Acciones */
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.badge-btn {
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  border: 1px solid #d7c8ff;
+  color: #5b32c8;
+  background: #f3edff;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.08s ease, box-shadow 0.12s ease;
+}
+.badge-btn:hover {
+  box-shadow: 0 8px 18px rgba(143, 107, 255, 0.26);
+  transform: translateY(-1px);
+}
+.badge-btn:active {
+  transform: translateY(0);
+}
+
+/* Defensa extra (por si vuelve a colarse algo vacío) */
+.wrap button:empty,
+.wrap .badge-btn:empty,
+.wrap .link:empty {
+  display: none !important;
+}

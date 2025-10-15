@@ -25,13 +25,13 @@ export class HeaderComponent {
 
   ngOnInit() {
     // Suscripción reactiva: cualquier cambio de sesión actualiza el header
-    this.authState.state$.subscribe(s => {
+    this.authState.state$.subscribe((s) => {
       this.isLogged = s.isLogged;
       this.role = s.role;
       this.name = s.name;
     });
 
-    // Leer estado inicial desde storage (sin recargar)
+    // Estado inicial desde storage (sin golpear el backend)
     if (this.isBrowser) this.authState.refreshFromStorage();
   }
 

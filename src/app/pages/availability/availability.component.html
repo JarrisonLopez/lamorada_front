@@ -1,91 +1,36 @@
-<div class="page">
-  <!-- Header -->
-  <header class="av-hero card">
-    <div>
-      <h2>Gestionar disponibilidad</h2>
-      <div class="muted">Configura tus días y horarios de atención.</div>
+<section class="av-wrap">
+  <h2>Mi disponibilidad</h2>
+
+  <ng-container *ngIf="loading; else content">
+    <p>Cargando…</p>
+  </ng-container>
+
+  <ng-template #content>
+    <!-- Si hay doc útil, la mostramos -->
+    <div *ngIf="hasData(); else empty" class="card">
+      <h3>Días</h3>
+      <p class="days">{{ daysJoined() }}</p>
+
+      <h3>Intervalos</h3>
+      <ul class="slots">
+        <li *ngFor="let s of doc!.slots">{{ s.start }} – {{ s.end }}</li>
+      </ul>
+
+      <a routerLink="/availability/manage" class="btn">Gestionar disponibilidad</a>
     </div>
 
-    <div class="toolbar">
-      <small class="muted">{{ slotsFA.length }} intervalo(s)</small>
-    </div>
-  </header>
-
-  <!-- Card principal -->
-  <section class="card">
-    <div class="card-body">
-      <div *ngIf="loading">Cargando…</div>
-      <div *ngIf="err" class="msg err">{{ err }}</div>
-      <div *ngIf="msg" class="msg ok">{{ msg }}</div>
-
-      <!-- DÍAS -->
-      <section class="block">
-        <h3>Días disponibles</h3>
-        <div class="days">
-          <label *ngFor="let d of days">
-            <input
-              type="checkbox"
-              [checked]="(form.value.days || []).includes(d.key)"
-              (change)="toggleDay(d.key, $any($event.target).checked)"
-            />
-            {{ d.label }}
-          </label>
-        </div>
-        <small
-          *ngIf="
-            (form.controls['days'].touched || form.controls['days'].dirty) &&
-            form.controls['days'].invalid
-          "
-          class="field-err"
-          >Selecciona al menos un día.</small
-        >
-      </section>
-
-      <!-- SLOTS -->
-      <section class="block">
-        <h3>Horarios (intervalos)</h3>
-
-        <div class="slot-list">
-          <div
-            class="slot-row"
-            *ngFor="let g of slotsFA.controls; let i = index; trackBy: trackSlot"
-            [formGroup]="slotGroupAt(i)"
-          >
-            <label
-              >Inicio
-              <input type="time" formControlName="start" />
-            </label>
-            <label
-              >Fin
-              <input type="time" formControlName="end" />
-            </label>
-
-            <div class="slot-actions">
-              <button
-                type="button"
-                class="btn btn-ghost btn-sm"
-                (click)="removeSlot(i)"
-                [disabled]="slotsFA.length <= 1"
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="actions" style="justify-content: flex-start; margin-top: 10px">
-          <button type="button" class="btn btn-ghost" (click)="addSlot()">Añadir intervalo</button>
-        </div>
-      </section>
-
-      <!-- ACCIONES -->
-      <section class="actions">
-        <button type="button" class="btn btn-primary" (click)="save()">Guardar</button>
-        <button type="button" class="btn btn-ghost" (click)="load()">Recargar</button>
-        <button type="button" class="btn btn-danger" *ngIf="docId" (click)="delete()">
-          Eliminar
-        </button>
-      </section>
-    </div>
-  </section>
-</div>
+    <!-- Mensajes según rol/estado -->
+    <ng-template #empty>
+      <div class="card">
+        <ng-container *ngIf="role === 'psychologist'; else patientMsg">
+          <p>Aún no has publicado tu disponibilidad.</p>
+          <a routerLink="/availability/manage" class="btn">Publicar ahora</a>
+        </ng-container>
+        <ng-template #patientMsg>
+          <p>Esta vista muestra la disponibilidad del profesional autenticado.</p>
+          <p>Si eres paciente, coordina con tu psicólogo o solicita un horario disponible.</p>
+        </ng-template>
+      </div>
+    </ng-template>
+  </ng-template>
+</section>

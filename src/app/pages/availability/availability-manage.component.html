@@ -1,94 +1,83 @@
-<div class="page">
-  <!-- Header -->
-  <header class="av-hero card">
-    <div>
-      <h2>Gestionar disponibilidad</h2>
-      <div class="muted">Selecciona días y define tus intervalos de atención.</div>
+<section class="box" *ngIf="!loading; else load">
+  <h2>Gestionar disponibilidad</h2>
+
+  <p *ngIf="msg" class="banner ok">{{ msg }}</p>
+  <p *ngIf="err" class="banner err">{{ err }}</p>
+
+  <div class="card">
+    <h3>Días</h3>
+    <div class="days">
+      <button
+        type="button"
+        *ngFor="let d of weekdays"
+        (click)="toggleDay(d)"
+        [class.active]="form.controls.days.value.includes(d)"
+      >
+        {{ dayLabel(d) | titlecase }}
+      </button>
     </div>
-    <div class="toolbar">
-      <small class="muted">{{ slotsFA.length }} intervalo(s)</small>
+
+    <h3>Intervalos</h3>
+    <div class="row" (keydown.enter)="addSlot()">
+      <label
+        >Desde
+        <input type="time" [formControl]="form.controls.start" />
+      </label>
+      <label
+        >Hasta
+        <input type="time" [formControl]="form.controls.end" />
+      </label>
+      <button type="button" class="flat" (click)="addSlot()">Añadir intervalo</button>
+      <span class="helper">Tip: presiona <strong>Enter</strong> para añadir</span>
     </div>
-  </header>
 
-  <!-- Card principal -->
-  <section class="card">
-    <div class="card-body">
-      <div *ngIf="loading">Cargando…</div>
-      <div *ngIf="err" class="msg err">{{ err }}</div>
-      <div *ngIf="msg" class="msg ok">{{ msg }}</div>
+    <div class="presets">
+      <span class="helper">Plantillas rápidas:</span>
+      <button class="pchip" type="button" (click)="addPreset('08:00', '12:00')">08:00–12:00</button>
+      <button class="pchip" type="button" (click)="addPreset('14:00', '18:00')">14:00–18:00</button>
+      <button class="pchip" type="button" (click)="addPreset('08:00', '16:00')">
+        Jornada (08–16)
+      </button>
+      <button class="pchip" type="button" (click)="addPreset('09:00', '17:00')">
+        Oficina (09–17)
+      </button>
+      <button class="pchip" type="button" (click)="addPreset('00:00', '23:59')">Todo el día</button>
+      <button class="pchip" type="button" (click)="clearSlots()">Limpiar</button>
+    </div>
 
-      <form [formGroup]="form" class="form" *ngIf="!loading">
-        <!-- DÍAS -->
-        <section class="block">
-          <h3>Días disponibles</h3>
-          <div class="days">
-            <label *ngFor="let d of days">
-              <input
-                type="checkbox"
-                [checked]="(form.value.days || []).includes(d.key)"
-                (change)="toggleDay(d.key, $any($event.target).checked)"
-              />
-              {{ d.label }}
-            </label>
-          </div>
-          <small
-            *ngIf="
-              (form.controls['days'].touched || form.controls['days'].dirty) &&
-              form.controls['days'].invalid
-            "
-            class="field-err"
-            >Selecciona al menos un día.</small
-          >
-        </section>
+    <ul class="slots">
+      <li class="slot" *ngFor="let s of slots; let i = index">
+        <strong>{{ s.start }}</strong> – <strong>{{ s.end }}</strong>
+        <button type="button" (click)="removeSlot(i)">x</button>
+      </li>
+    </ul>
 
-        <!-- SLOTS -->
-        <section class="block">
-          <h3>Horarios (intervalos)</h3>
+    <div class="actions">
+      <button type="button" (click)="save()" [disabled]="saving">Guardar</button>
+      <button type="button" class="danger" (click)="deleteAll()">Eliminar disponibilidad</button>
+    </div>
 
-          <div class="slot-list">
-            <div
-              class="slot-row"
-              *ngFor="let g of slotsFA.controls; let i = index; trackBy: trackSlot"
-              [formGroup]="slotGroupAt(i)"
-            >
-              <label
-                >Inicio
-                <input type="time" formControlName="start" />
-              </label>
-              <label
-                >Fin
-                <input type="time" formControlName="end" />
-              </label>
-
-              <div class="slot-actions">
-                <button
-                  type="button"
-                  class="btn btn-ghost btn-sm"
-                  (click)="removeSlot(i)"
-                  [disabled]="slotsFA.length <= 1"
-                >
-                  Eliminar
-                </button>
-              </div>
+    <div class="preview" *ngIf="previewBars.length">
+      <h4>Vista previa semanal</h4>
+      <div class="week">
+        <ng-container *ngFor="let r of previewBars">
+          <div class="roww">
+            <div class="dayname">{{ r.label }}</div>
+            <div class="bar">
+              <div
+                class="fill"
+                *ngFor="let b of r.bars"
+                [style.left.%]="b.left"
+                [style.width.%]="b.width"
+              ></div>
             </div>
           </div>
-
-          <div class="actions" style="justify-content: flex-start; margin-top: 10px">
-            <button type="button" class="btn btn-ghost" (click)="addSlot()">
-              Añadir intervalo
-            </button>
-          </div>
-        </section>
-
-        <!-- ACCIONES -->
-        <section class="actions">
-          <button type="button" class="btn btn-primary" (click)="save()">Guardar</button>
-          <button type="button" class="btn btn-ghost" (click)="load()">Recargar</button>
-          <button type="button" class="btn btn-danger" *ngIf="docId" (click)="delete()">
-            Eliminar
-          </button>
-        </section>
-      </form>
+        </ng-container>
+      </div>
     </div>
-  </section>
-</div>
+  </div>
+</section>
+
+<ng-template #load>
+  <div class="box">Cargando…</div>
+</ng-template>

@@ -1,0 +1,103 @@
+<section
+  class="page"
+  (keydown.ctrl.enter)="submitShortcut()"
+  (keydown.meta.enter)="submitShortcut()"
+>
+  <h2>Editor de publicaciones</h2>
+  <p class="hint">Crea nuevas entradas para el blog. Solo para psicólogos.</p>
+
+  <p *ngIf="err()" class="banner err" aria-live="assertive">{{ err() }}</p>
+  <p *ngIf="msg()" class="banner ok" aria-live="polite">{{ msg() }}</p>
+
+  <div class="grid">
+    <!-- Columna izquierda: editor -->
+    <form [formGroup]="form" (ngSubmit)="create()" class="form" novalidate>
+      <label>
+        <span class="lbl">Título</span>
+        <input
+          formControlName="title"
+          maxlength="160"
+          placeholder="Ej: Técnicas de respiración"
+          (input)="updateCounters()"
+        />
+        <div class="counter">
+          <span>{{ titleLen }}/160 caracteres</span>
+          <div class="progress" style="width: 46%">
+            <span [style.width.%]="titlePct"></span>
+          </div>
+        </div>
+      </label>
+
+      <div>
+        <div class="quick-templates helper">
+          Plantillas rápidas:
+          <button type="button" class="chip" (click)="insertTemplate('respiro')">
+            Respiración
+          </button>
+          <button type="button" class="chip" (click)="insertTemplate('mind')">Mindfulness</button>
+          <button type="button" class="chip" (click)="insertTemplate('tips')">Tips rápidos</button>
+        </div>
+        <label>
+          <span class="lbl">Contenido</span>
+          <textarea
+            rows="8"
+            formControlName="content"
+            placeholder="Escribe tu contenido…"
+            (input)="updateCounters()"
+          ></textarea>
+        </label>
+        <div class="counter">
+          <span>{{ words }} palabras · {{ contentLen }} caracteres</span>
+          <div class="progress" style="width: 58%">
+            <span [style.width.%]="contentPct"></span>
+          </div>
+        </div>
+      </div>
+
+      <label class="switch">
+        <input type="checkbox" formControlName="active" />
+        <span class="toggle"><i class="knob"></i></span>
+        <span>Publicar (visible)</span>
+      </label>
+
+      <button [disabled]="saving() || form.invalid">
+        {{ saving() ? 'Creando…' : 'Crear publicación' }}
+      </button>
+      <div class="helper">Atajo: <strong>Ctrl/⌘ + Enter</strong> para publicar</div>
+    </form>
+
+    <!-- Columna derecha: vista previa -->
+    <aside class="preview-card">
+      <h3 class="p-title">{{ form.value.title || 'Título de ejemplo' }}</h3>
+      <div class="p-meta">
+        <span class="tag">LaMorada</span>
+        <span>· {{ now | date : 'dd/MM/yy, HH:mm' }}</span>
+        <span class="tag">{{ form.value.active ? 'Visible' : 'Oculta' }}</span>
+      </div>
+      <div class="p-body">
+        {{ form.value.content || 'Escribe algo inspirador…' }}
+      </div>
+    </aside>
+  </div>
+
+  <h3 class="section-title">Mis publicaciones</h3>
+  <div class="list" *ngIf="!loading() && myPosts().length; else emptyOrLoading">
+    <article class="item" *ngFor="let p of myPosts()">
+      <div class="meta">
+        <strong>{{ p.title }}</strong>
+        <span *ngIf="p.created_at"> · {{ p.created_at | date : 'dd/MM/yy, HH:mm' }}</span>
+        <span class="badge" [class.off]="p.active === false">{{
+          p.active === false ? 'Oculta' : 'Activa'
+        }}</span>
+      </div>
+      <div class="actions">
+        <button class="danger" (click)="remove(p)">Eliminar</button>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #emptyOrLoading>
+    <div *ngIf="loading()">Cargando…</div>
+    <div *ngIf="!loading()">Aún no tienes publicaciones.</div>
+  </ng-template>
+</section>

@@ -1,21 +1,101 @@
-<h2>Pagos</h2>
-<div *ngIf="!payments().length">No tienes pagos.</div>
+<section class="pay-wrap">
+  <h2 class="pay-title">Métodos de pago</h2>
 
-<table *ngIf="payments().length">
-  <thead>
-    <tr>
-      <th>Método</th>
-      <th>Monto</th>
-      <th>Fecha</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let p of payments()">
-      <td>{{ p.method }}</td>
-      <td>${{ p.amount }}</td>
-      <td>{{ p.createdAt | date:'short' }}</td>
-      <td><button (click)="remove(p._id)">Eliminar</button></td>
-    </tr>
-  </tbody>
-</table>
+  <!-- Guardados -->
+  <div class="pay-card">
+    <div class="pay-card__header">
+      <h3>Guardados</h3>
+      <button type="button" class="btn-link" (click)="refresh(true)">Recargar</button>
+    </div>
+
+    <ng-container *ngIf="loadingList; else listTpl">
+      <div class="empty muted">Cargando…</div>
+    </ng-container>
+
+    <ng-template #listTpl>
+      <ul class="saved-list" *ngIf="items.length; else emptyTpl">
+        <li *ngFor="let p of items" class="saved-item">
+          <div class="saved-item__left">
+            <div class="chip-brand">••••</div>
+            <div class="saved-lines">
+              <div class="saved-number">{{ mask(p.card_number) }}</div>
+              <div class="saved-meta">{{ p.card_name }} · vence {{ p.expiration_date }}</div>
+            </div>
+          </div>
+          <button
+            class="btn btn-danger"
+            type="button"
+            (click)="onDelete(p._id)"
+            [disabled]="deletingIds.has(p._id)"
+          >
+            {{ deletingIds.has(p._id) ? 'Eliminando…' : 'Eliminar' }}
+          </button>
+        </li>
+      </ul>
+      <ng-template #emptyTpl>
+        <div class="empty muted">No tienes métodos guardados.</div>
+      </ng-template>
+    </ng-template>
+  </div>
+
+  <!-- Añadir tarjeta -->
+  <div class="add-grid">
+    <!-- Preview de la tarjeta -->
+    <div class="card-preview">
+      <div class="card-3d">
+        <div class="card-3d__bg"></div>
+        <div class="card-3d__chip"></div>
+        <div class="card-3d__brand">LaMorada</div>
+
+        <div class="card-3d__number">
+          {{ form?.value?.card_number || '•••• •••• •••• ••••' }}
+        </div>
+
+        <div class="card-3d__meta">
+          <div class="holder">
+            <span>Nombre</span>
+            <strong>{{ form?.value?.card_name || 'JOHN DOE' }}</strong>
+          </div>
+          <div class="exp">
+            <span>Vence</span>
+            <strong>{{ form?.value?.expiration_date || 'MM/AA' }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario -->
+    <div class="pay-card">
+      <div class="pay-card__header">
+        <h3>Añadir tarjeta</h3>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSave()" class="pay-form">
+        <div class="field">
+          <input formControlName="card_number" placeholder=" " inputmode="numeric" />
+          <label>Número de tarjeta</label>
+        </div>
+
+        <div class="field">
+          <input formControlName="card_name" placeholder=" " />
+          <label>Nombre en la tarjeta</label>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <input formControlName="expiration_date" placeholder=" " />
+            <label>Vencimiento (MM/AA)</label>
+          </div>
+          <div class="field">
+            <input formControlName="cvv" placeholder=" " inputmode="numeric" />
+            <label>CVV</label>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" type="submit" [disabled]="saving">
+          {{ saving ? 'Guardando…' : 'Guardar tarjeta' }}
+        </button>
+      </form>
+    </div>
+  </div>
+</section>

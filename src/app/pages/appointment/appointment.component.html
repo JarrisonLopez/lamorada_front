@@ -1,156 +1,87 @@
-<section class="page">
-  <!-- Encabezado + progreso -->
-  <header class="hero">
-    <div>
-      <h2>Agendar cita</h2>
-      <p class="muted">
-        Elige una fecha y hora. Para hoy, la hora mínima se ajusta a los próximos 15 minutos.
-      </p>
-    </div>
+<section class="box" *ngIf="!loading; else loadTpl">
+  <h2>Citas</h2>
 
-    <div class="steps" aria-hidden="true">
-      <div class="step done"><span>1</span> Fecha & hora</div>
-      <div class="divider"></div>
-      <div class="step"><span>2</span> Profesional</div>
-      <div class="divider"></div>
-      <div class="step"><span>3</span> Confirmar</div>
-    </div>
-  </header>
-
-  <!-- Mensajes -->
-  <p *ngIf="err" class="msg err" aria-live="assertive">{{ err }}</p>
-  <p *ngIf="msg" class="msg ok" aria-live="polite">{{ msg }}</p>
-
-  <!-- CONTENIDO: 2 columnas -->
-  <div class="grid">
-    <!-- Columna izquierda: FORM -->
-    <form class="card form" [formGroup]="form" (ngSubmit)="submit()">
-      <!-- Atajos -->
-      <div class="chips">
-        <button type="button" class="chip" (click)="pickToday()">Hoy</button>
-        <button type="button" class="chip" (click)="pickTomorrow()">Mañana</button>
-      </div>
-
-      <div class="row">
-        <!-- Fecha -->
-        <label class="field">
-          <span class="label">Fecha</span>
-          <div class="input with-icon">
-            <span class="icon calendar" aria-hidden="true"></span>
-            <input
-              type="date"
-              formControlName="date"
-              [min]="minDate"
-              [class.invalid]="form.get('date')?.touched && form.get('date')?.invalid"
-              aria-label="Fecha de la cita"
-            />
-          </div>
-          <small
-            class="field-err"
-            *ngIf="form.get('date')?.touched && form.get('date')?.hasError('required')"
-          >
-            La fecha es obligatoria.
-          </small>
-        </label>
-
-        <!-- Hora -->
-        <label class="field">
-          <span class="label">Hora</span>
-          <div class="input with-icon">
-            <span class="icon clock" aria-hidden="true"></span>
-            <input
-              type="time"
-              formControlName="time"
-              step="900"
-              [min]="minTime"
-              [class.invalid]="form.get('time')?.touched && form.get('time')?.invalid"
-              aria-label="Hora de la cita"
-            />
-          </div>
-          <small class="hint"
-            >Mínimo permitido: <strong>{{ minTime }}</strong> para la fecha seleccionada.</small
-          >
-          <small
-            class="field-err"
-            *ngIf="form.get('time')?.touched && form.get('time')?.hasError('required')"
-          >
-            La hora es obligatoria.
-          </small>
-        </label>
-      </div>
-
-      <!-- Psicólogo -->
-      <label class="field">
-        <span class="label">Psicólogo (opcional)</span>
-        <div class="input with-icon">
-          <span class="icon user" aria-hidden="true"></span>
-          <select formControlName="psychologist_id" aria-label="Seleccionar psicólogo">
-            <option value="">Cualquiera</option>
-            <option *ngFor="let p of psychologists" [value]="p._id">{{ p.name }}</option>
-          </select>
-        </div>
-        <small class="hint"
-          >Si no eliges a nadie, te asignaremos el primer profesional disponible.</small
-        >
+  <form class="form" [formGroup]="form" (ngSubmit)="$event.preventDefault(); create()">
+    <div class="row">
+      <label class="col">
+        <span>Fecha</span>
+        <input type="date" formControlName="date" [min]="minDate" (change)="regenerateHours()">
       </label>
 
-      <!-- Notas -->
-      <label class="field">
-        <span class="label">Notas (opcional)</span>
-        <textarea
-          formControlName="notes"
-          rows="4"
-          placeholder="Motivo de la consulta, objetivos, observaciones…"
-          aria-label="Notas de la cita"
-        ></textarea>
+      <label class="col">
+        <span>Hora</span>
+        <select formControlName="hour">
+          <option value="" disabled>Selecciona</option>
+          <option *ngFor="let h of hours" [value]="h">{{ h }}</option>
+        </select>
       </label>
 
-      <div class="actions">
-        <button type="submit" class="btn btn-primary" [disabled]="loading || form.invalid">
-          {{ loading ? 'Creando…' : 'Crear cita' }}
-        </button>
+      <label class="col">
+        <span>Psicólogo</span>
+        <select formControlName="psychologist_id">
+          <option value="" disabled>Selecciona</option>
+          <option *ngFor="let u of psychologists" [value]="u._id">
+            {{ u.name || u.email || u._id }}
+          </option>
+        </select>
+      </label>
+
+      <label class="col" *ngIf="role === 'psychologist'">
+        <span>Paciente</span>
+        <select formControlName="patient_id">
+          <option value="" disabled>Selecciona</option>
+          <option *ngFor="let u of patients" [value]="u._id">
+            {{ u.name || u.email || u._id }}
+          </option>
+        </select>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button type="submit" [disabled]="creating || form.invalid">
+        {{ creating ? 'Creando…' : 'Crear cita' }}
+      </button>
+    </div>
+  </form>
+
+  <h3 class="mt">Mis citas</h3>
+  <div *ngIf="listing" class="muted">Cargando listado…</div>
+  <div *ngIf="!listing && !appointments.length" class="muted">No hay citas.</div>
+
+  <ul class="list" *ngIf="!listing && appointments.length">
+    <li *ngFor="let a of appointments">
+      <div class="row2">
+        <div class="who">
+          <div><strong>Psicólogo:</strong> {{ findUserName(a.psychologist_id) }}</div>
+          <div><strong>Paciente:</strong> {{ findUserName(a.patient_id) }}</div>
+        </div>
+        <div class="when">
+          <div><strong>Día:</strong> {{ a.day | titlecase }}</div>
+          <div><strong>Hora:</strong> {{ a.start }}–{{ a.end }}</div>
+        </div>
+        <div class="status">
+          <span class="chip" [class.pend]="a.status==='pendiente'"
+                            [class.conf]="a.status==='confirmada'"
+                            [class.comp]="a.status==='completada'"
+                            [class.canc]="a.status==='cancelada'">
+            {{ a.status | titlecase }}
+          </span>
+        </div>
       </div>
-    </form>
 
-    <!-- Columna derecha: RESUMEN -->
-    <aside class="aside">
-      <div class="summary card">
-        <h3>Resumen</h3>
+      <div class="row3">
+        <button class="link danger" (click)="delete(a._id)">Cancelar</button>
 
-        <div class="summary-row">
-          <span class="icon calendar"></span>
-          <div>
-            <small class="muted">Fecha</small>
-            <div class="val">{{ previewDate() || '—' }}</div>
-          </div>
-        </div>
-
-        <div class="summary-row">
-          <span class="icon clock"></span>
-          <div>
-            <small class="muted">Hora</small>
-            <div class="val">{{ previewTime() || '—' }}</div>
-          </div>
-        </div>
-
-        <div class="summary-row">
-          <span class="icon user"></span>
-          <div>
-            <small class="muted">Profesional</small>
-            <div class="val">{{ psychName() }}</div>
-          </div>
-        </div>
-
-        <div class="hr"></div>
-
-        <ul class="bullets">
-          <li>Duración estimada: 50 min</li>
-          <li>Reunión por videollamada o presencial*</li>
-          <li>Recibirás recordatorio por email</li>
-        </ul>
-
-        <small class="muted note">* La modalidad exacta se confirma con el profesional.</small>
+        <ng-container *ngIf="role === 'psychologist'">
+          <button class="link" (click)="setStatus(a, 'confirmada')" [disabled]="a.status==='cancelada' || a.status==='completada'">Confirmar</button>
+          <button class="link" (click)="setStatus(a, 'completada')" [disabled]="a.status==='cancelada'">Marcar completada</button>
+          <button class="link" (click)="setStatus(a, 'cancelada')" [disabled]="a.status==='completada'">Marcar cancelada</button>
+        </ng-container>
       </div>
-    </aside>
-  </div>
+    </li>
+  </ul>
 </section>
+
+<ng-template #loadTpl>
+  <div class="box">Cargando…</div>
+</ng-template>

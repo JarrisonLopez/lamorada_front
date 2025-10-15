@@ -1,6 +1,24 @@
-html, body {
+/* ===== Global reset + fondo ===== */
+:root {
+  /* Altura de respaldo del footer si aún no se calculó en runtime */
+  --lm-footer-h: 96px;
+}
+
+html,
+body {
+  min-height: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
   background-color: #ffffff;
+}
+
+/* Deja “colchón” al final de todas las páginas para el footer fijo */
+body.lm-has-fixed-footer {
+  padding-bottom: calc(var(--lm-footer-h, 96px) + 16px) !important;
+}
+
+/* Mejora el scroll hacia anclas/elementos cercanos al final */
+html {
+  scroll-padding-bottom: calc(var(--lm-footer-h, 96px) + 24px);
 }

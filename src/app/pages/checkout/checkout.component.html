@@ -1,8 +1,76 @@
-<h2>Checkout</h2>
-<div *ngFor="let it of cart().items">
-  {{ it.title }} × {{ it.quantity }} — ${{ it.price * it.quantity }}
-</div>
-<p>Total: <strong>${{ total }}</strong></p>
-<button (click)="payNow()">Pagar ahora</button>
-<p *ngIf="msg()" style="color:green">{{ msg() }}</p>
-<p *ngIf="err()" style="color:red">{{ err() }}</p>
+<section class="wrap">
+  <h2>Checkout</h2>
+
+  <!-- Resumen -->
+  <div class="card">
+    <h3>Resumen</h3>
+
+    <ng-container *ngIf="!loadingCart; else cartLoading">
+      <ng-container *ngIf="lines.length; else emptyCart">
+        <ul class="lines">
+          <li *ngFor="let l of lines">
+            <div class="line">
+              <img *ngIf="l.cover_url" [src]="l.cover_url" alt="" width="40" height="56" />
+              <div class="meta">
+                <strong>{{ l.title || ('Producto ' + l.product_id) }}</strong>
+                <small>Cantidad: {{ l.quantity }}</small>
+              </div>
+              <div class="price">{{ (l.price * l.quantity) | currency:'COP':'symbol':'1.0-0' }}</div>
+            </div>
+          </li>
+        </ul>
+
+        <div class="totals">
+          <div><span>Subtotal</span><strong>{{ subtotal | currency:'COP':'symbol':'1.0-0' }}</strong></div>
+          <div class="total"><span>Total</span><strong>{{ total | currency:'COP':'symbol':'1.0-0' }}</strong></div>
+        </div>
+      </ng-container>
+      <ng-template #emptyCart>
+        <p class="muted">Tu carrito está vacío.</p>
+        <a routerLink="/product" class="btn">Ir al catálogo</a>
+      </ng-template>
+    </ng-container>
+
+    <ng-template #cartLoading>
+      <p class="muted">Cargando carrito…</p>
+    </ng-template>
+  </div>
+
+  <!-- Métodos de pago -->
+  <div class="card">
+    <h3>Selecciona un método de pago</h3>
+
+    <ng-container *ngIf="!loadingPayments; else payLoading">
+      <ng-container *ngIf="cards.length; else noCards">
+        <ul class="list">
+          <li *ngFor="let c of cards">
+            <div class="info">
+              <div class="title">{{ mask(c.card_number) }}</div>
+              <div class="meta">
+                <span>{{ c.card_name }}</span>
+                <span>Vence: {{ c.expiration_date }}</span>
+              </div>
+            </div>
+            <button class="btn primary" (click)="onPay(c)" [disabled]="paying">
+              {{ paying ? 'Procesando…' : 'Pagar' }}
+            </button>
+          </li>
+        </ul>
+        <div class="addmore">
+          <a routerLink="/payment">Gestionar métodos de pago</a>
+        </div>
+      </ng-container>
+
+      <ng-template #noCards>
+        <div class="empty">
+          No tienes tarjetas guardadas.
+          <button type="button" class="btn" (click)="goToAddCard()">Añadir tarjeta</button>
+        </div>
+      </ng-template>
+    </ng-container>
+
+    <ng-template #payLoading>
+      <p class="muted">Cargando métodos de pago…</p>
+    </ng-template>
+  </div>
+</section>

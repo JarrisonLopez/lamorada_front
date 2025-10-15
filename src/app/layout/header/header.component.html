@@ -17,16 +17,20 @@
     <a routerLink="/product" routerLinkActive="active">Productos</a>
     <a routerLink="/podcast" routerLinkActive="active">Podcasts</a>
     <a routerLink="/post" routerLinkActive="active">Posts</a>
+    <a routerLink="/profile" routerLinkActive="active">Psicólogos</a>
 
     <!-- Solo logueados -->
     <ng-container *ngIf="isLogged; else guest">
       <a routerLink="/cart" routerLinkActive="active">Carrito</a>
       <a routerLink="/appointment" routerLinkActive="active">Citas</a>
+      <a routerLink="/profile/edit" routerLinkActive="active">Editar perfil</a>
+      <a routerLink="/payment" routerLinkActive="active">Métodos de pago</a>
 
       <!-- Para psicólogo -->
       <ng-container *ngIf="role === 'psychologist'">
         <a routerLink="/availability/manage" routerLinkActive="active">Disponibilidad</a>
-        <a routerLink="/post/manage" routerLinkActive="active">Posts (gestión)</a>
+        <a routerLink="/post/editor" routerLinkActive="active">Agregar post</a>
+        <a routerLink="/product/create" routerLinkActive="active">Crear producto</a>
       </ng-container>
 
       <span class="spacer"></span>

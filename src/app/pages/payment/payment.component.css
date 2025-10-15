@@ -1,2 +1,369 @@
-table { border-collapse: collapse; width:100%; }
-th, td { border:1px solid #eee; padding:.5rem; text-align:left; }
+/* ===========================
+   LaMorada — Métodos de pago
+   Rediseño 3D + Neón
+   =========================== */
+
+:root {
+  --ink: #1e1335;
+  --muted: #8775ae;
+
+  --mor-1: #6d43ff;
+  --mor-2: #9a7bff;
+  --mor-3: #d3c4ff;
+
+  --pink-1: #ff70cc;
+  --pink-2: #ffb8e6;
+
+  --danger: #b06bff;
+
+  --panel: #ffffff;
+  --glass: rgba(255, 255, 255, 0.6);
+  --br: #ece4ff;
+  --ring: 0 0 0 4px rgba(109, 67, 255, 0.14);
+  --radius: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.pay-wrap {
+  max-width: 1060px;
+  margin: 24px auto 64px;
+  padding: 0 18px;
+  color: var(--ink);
+  position: relative;
+  isolation: isolate;
+}
+
+/* Ambientación con “aurora” */
+.pay-wrap::before,
+.pay-wrap::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(44px);
+  opacity: 0.55;
+}
+.pay-wrap::before {
+  width: 460px;
+  height: 320px;
+  left: -140px;
+  top: -80px;
+  background: radial-gradient(200px 160px at 30% 35%, var(--mor-3), transparent 60%),
+    radial-gradient(220px 180px at 70% 60%, var(--pink-2), transparent 58%);
+}
+.pay-wrap::after {
+  width: 420px;
+  height: 300px;
+  right: -120px;
+  bottom: -100px;
+  background: radial-gradient(220px 180px at 65% 50%, var(--mor-2), transparent 55%),
+    radial-gradient(160px 140px at 30% 40%, var(--pink-1), transparent 60%);
+}
+
+.pay-title {
+  margin: 0.25rem 0 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+/* ————— Tarjeta contenedora (glass) ————— */
+.pay-card {
+  background: linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(135deg, #dacfff, #ffe4f4) border-box;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  box-shadow: 0 20px 38px rgba(109, 67, 255, 0.16), 0 3px 10px rgba(0, 0, 0, 0.04);
+  padding: 18px;
+}
+
+.pay-card + .pay-card {
+  margin-top: 16px;
+}
+
+.pay-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.pay-card__header h3 {
+  margin: 0;
+  font-weight: 700;
+}
+
+/* ————— Lista guardada ————— */
+.saved-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.saved-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--br);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fff, #faf7ff);
+  box-shadow: 0 10px 26px rgba(109, 67, 255, 0.12);
+  transition: transform 0.08s ease, box-shadow 0.12s ease;
+}
+.saved-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px rgba(109, 67, 255, 0.18);
+}
+.saved-item__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.chip-brand {
+  min-width: 36px;
+  height: 26px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #ffd2f0, #d7c6ff);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.6), 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+.saved-lines {
+  display: flex;
+  flex-direction: column;
+}
+.saved-number {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+.saved-meta {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.empty {
+  padding: 8px 2px;
+}
+
+/* ————— Grid para añadir ————— */
+.add-grid {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 18px;
+  margin-top: 18px;
+}
+@media (max-width: 980px) {
+  .add-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ————— Preview de tarjeta 3D ————— */
+.card-preview {
+  position: relative;
+  perspective: 1000px;
+}
+.card-3d {
+  position: sticky;
+  top: 24px;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 20px;
+  padding: 18px;
+  color: #fff;
+  overflow: hidden;
+  transform: rotateX(8deg) rotateY(-8deg);
+  transform-style: preserve-3d;
+  background: radial-gradient(140% 140% at 10% 10%, #6d43ff 0%, #b56cff 40%, #ff77cf 100%);
+  box-shadow: 0 30px 60px rgba(109, 67, 255, 0.36), 0 12px 18px rgba(0, 0, 0, 0.1);
+}
+.card-3d__bg {
+  position: absolute;
+  inset: -10%;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(220px 160px at 85% 10%, rgba(255, 255, 255, 0.22), transparent 60%),
+    radial-gradient(300px 240px at 20% 80%, rgba(255, 255, 255, 0.16), transparent 60%);
+  filter: blur(12px);
+}
+.card-3d__chip {
+  position: absolute;
+  left: 18px;
+  top: 18px;
+  width: 46px;
+  height: 34px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #ffeab0, #e6c873);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1), 0 6px 12px rgba(0, 0, 0, 0.16);
+}
+.card-3d__brand {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  opacity: 0.92;
+}
+.card-3d__number {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.35rem;
+  letter-spacing: 0.12rem;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+.card-3d__meta {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.92rem;
+}
+.card-3d__meta span {
+  opacity: 0.7;
+  display: block;
+}
+.card-3d__meta strong {
+  letter-spacing: 0.4px;
+}
+
+/* Línea brillante que pasa */
+.card-3d::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    120deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%);
+  animation: shimmer 4.5s ease-in-out infinite;
+  mix-blend-mode: screen;
+}
+@keyframes shimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+/* ————— Formulario con “floating labels” ————— */
+.pay-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.field-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.field {
+  position: relative;
+}
+.field input {
+  width: 100%;
+  padding: 14px 14px 12px;
+  border: 1px solid var(--br);
+  border-radius: 12px;
+  background: #fbf8ff;
+  color: var(--ink);
+  outline: 0;
+  transition: box-shadow 0.15s, border-color 0.15s, background 0.15s, transform 0.04s;
+}
+.field input::placeholder {
+  color: transparent;
+} /* floating */
+.field input:hover {
+  transform: translateY(-1px);
+}
+.field input:focus {
+  border-color: #cbb4ff;
+  box-shadow: var(--ring);
+  background: #fff;
+}
+.field label {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #fff;
+  padding: 0 6px;
+  border-radius: 6px;
+  color: var(--muted);
+  pointer-events: none;
+  transition: all 0.15s ease;
+}
+.field input:focus + label,
+.field input:not(:placeholder-shown) + label {
+  top: -8px;
+  font-size: 0.78rem;
+  color: #6d43ff;
+  box-shadow: 0 0 0 4px #fff; /* “píldora” blanca */
+}
+
+/* ————— Botones ————— */
+.btn {
+  appearance: none;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  padding: 0.78rem 1.05rem;
+  transition: transform 0.08s ease, box-shadow 0.16s ease, filter 0.12s ease;
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-primary {
+  background: radial-gradient(120% 120% at 0% 0%, #6d43ff 0%, #9a7bff 40%, #ff77cf 100%);
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(109, 67, 255, 0.34);
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+.btn-danger {
+  background: linear-gradient(135deg, #a46bff, #a46bff);
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(129, 107, 255, 0.32);
+}
+.btn-danger:hover {
+  transform: translateY(-1px);
+}
+
+.btn-link {
+  background: transparent;
+  border: none;
+  color: #6d43ff;
+  cursor: pointer;
+  padding: 0.25rem 0.1rem;
+  border-bottom: 1px dashed #cbb4ff;
+}
+.btn-link:hover {
+  color: #4e28d0;
+}
+
+/* Utilidades */
+.muted {
+  color: var(--muted);
+}

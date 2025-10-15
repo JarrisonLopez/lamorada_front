@@ -21,39 +21,28 @@ export class PodcastService {
     if (isPlatformBrowser(this.platformId)) {
       try { token = localStorage.getItem('token'); } catch {}
     }
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      Authorization: token ? `Bearer ${token}` : '',
-    });
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return new HttpHeaders(headers);
   }
 
+  /** Lista de podcasts (el back devuelve { success, podcasts }) */
   getPodcasts(): Observable<any[]> {
     return this.http.get<any>(this.baseUrl).pipe(
-      map(r => Array.isArray(r) ? r : (r?.podcasts ?? []))
-    );
-  }
-
-  createPodcast(data: CreatePodcastDto): Observable<any> {
-    const headers = this.authHeaders();
-    return this.http.post(`${this.baseUrl}/create`, data, { headers }).pipe(
-      catchError(err => {
-        if (err?.status === 404 || err?.status === 405) {
-          return this.http.post(this.baseUrl, data, { headers }); // fallback
-        }
-        return throwError(() => err);
+      map(r => {
+        const list = Array.isArray(r) ? r : (r?.podcasts ?? []);
+        return Array.isArray(list) ? list : [];
       })
     );
   }
 
-  /** Eliminar podcast del autor (best-effort con 2 rutas conocidas) */
-  deletePodcast(id: string): Observable<any> {
+  /** Crear podcast: prioriza POST /podcast; fallback a /podcast/create si 404/405 */
+  createPodcast(data: CreatePodcastDto): Observable<any> {
     const headers = this.authHeaders();
-    // 1) DELETE /podcast/:id
-    return this.http.delete(`${this.baseUrl}/${id}`, { headers }).pipe(
+    return this.http.post(`${this.baseUrl}`, data, { headers }).pipe(
       catchError(err => {
         if (err?.status === 404 || err?.status === 405) {
-          // 2) DELETE /podcast/delete/:id (fallback)
-          return this.http.delete(`${this.baseUrl}/delete/${id}`, { headers });
+          return this.http.post(`${this.baseUrl}/create`, data, { headers });
         }
         return throwError(() => err);
       })

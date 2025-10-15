@@ -1,6 +1,7 @@
-import { inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
+import { PLATFORM_ID } from '@angular/core';
 
 function getToken(platformId: Object): string | null {
   if (!isPlatformBrowser(platformId)) return null;
@@ -18,16 +19,17 @@ function getRolesFromToken(token: string | null): string[] {
 
 export const AuthRoleGuard: CanActivateFn = (route) => {
   const router = inject(Router);
-  const platformId = inject(PLATFORM_ID);
+  const platformId = inject(PLATFORM_ID) as Object; // <- tipado correcto
 
-  // En SSR, deja pasar para que renderice; el cliente re-evaluará y redirigirá si hace falta
-  const token = getToken(platformId);
+  // En SSR: permitir (el cliente re-evaluará y redirigirá si corresponde)
   if (!isPlatformBrowser(platformId)) return true;
 
+  const token = getToken(platformId);
   if (!token) {
     router.navigate(['/sign-in']);
     return false;
   }
+
   const expected = route.data?.['expectedRoles'] as string[] | undefined;
   const roles = getRolesFromToken(token);
 
