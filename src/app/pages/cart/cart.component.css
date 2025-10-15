@@ -154,7 +154,7 @@
 button.link {
   background: #fff;
   border: 1px solid var(--lm-border);
-  color: var(--lm-red);
+  color: #c23b52;
   padding: 8px 10px;
   border-radius: 12px;
   cursor: pointer;
@@ -193,7 +193,7 @@ tfoot .total {
   box-shadow: 0 10px 24px rgba(143, 107, 255, 0.16);
 }
 
-/* Botón morado (Vaciar carrito) */
+/* Botón morado (Continuar / Vaciar) */
 .btn-primary {
   color: #fff;
   background: linear-gradient(180deg, #b096ff, #9b7bff 60%, #8f6bff);
@@ -202,16 +202,6 @@ tfoot .total {
 }
 .btn-primary:hover {
   filter: brightness(1.05);
-}
-
-/* (opcional) seguimos dejando el danger si alguna vez lo usas */
-.btn-danger {
-  color: #fff;
-  background: linear-gradient(180deg, #ff7b9a, #f25f7e 60%, #e44d6d);
-  border: 0;
-}
-.btn-danger:hover {
-  filter: brightness(1.03);
 }
 
 /* Empty */
