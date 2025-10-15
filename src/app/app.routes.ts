@@ -11,7 +11,6 @@ import { PodcastComponent } from './pages/podcast/podcast.component';
 
 // Posts
 import { PostListComponent } from './pages/post/post-list.component';
-import { PostManageComponent } from './pages/post/post-manage.component';
 
 // Carrito / Citas / Disponibilidad
 import { CartComponent } from './pages/cart/cart.component';
@@ -44,14 +43,17 @@ export const routes: Routes = [
 
   // Posts
   { path: 'post', component: PostListComponent }, // público
-  {
-    path: 'post/manage',
-    component: PostManageComponent,
-    canActivate: [AuthRoleGuard],
-    data: { expectedRoles: ['psychologist'] }
-  },
 
   { path: 'podcast', component: PodcastComponent },
+
+  // Crear producto (lazy loaded)
+  {
+  path: 'product/create',
+  loadComponent: () => import('./pages/product/product-create.component')
+    .then(m => m.ProductCreateComponent),
+  canActivate: [AuthRoleGuard],
+  data: { expectedRoles: ['psychologist'] }
+  },
 
   // Carrito / Citas (protegidas)
   {
@@ -101,6 +103,15 @@ export const routes: Routes = [
     canActivate: [AuthRoleGuard],
     data: { expectedRoles: ['patient', 'psychologist'] }
   },
+
+  // Post Editor (lazy loaded)
+  {
+  path: 'post/editor',
+  loadComponent: () => import('./pages/post/post-editor.component').then(m => m.PostEditorComponent),
+  canActivate: [AuthRoleGuard],
+  data: { expectedRoles: ['psychologist'] }
+  },
+
 
   { path: '', pathMatch: 'full', redirectTo: 'home' },
   { path: '**', redirectTo: 'home' },

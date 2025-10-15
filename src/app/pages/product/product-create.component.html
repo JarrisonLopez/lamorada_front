@@ -1,0 +1,34 @@
+<section class="page">
+  <h2>Crear producto</h2>
+  <p class="hint">Solo para psicólogos. Todos los precios se muestran en USD.</p>
+
+  <p *ngIf="err()" class="banner err" aria-live="assertive">{{ err() }}</p>
+  <p *ngIf="msg()" class="banner ok" aria-live="polite">{{ msg() }}</p>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="form" novalidate>
+    <label>Título
+      <input formControlName="title" placeholder="Ej: Mindfulness avanzado" />
+    </label>
+
+    <label>Autor
+      <input formControlName="author" placeholder="Ej: Laura Gómez" />
+    </label>
+
+    <div class="row">
+      <label>Año
+        <input type="number" formControlName="publish_year" />
+      </label>
+      <label>Precio (USD)
+        <input type="number" step="0.01" formControlName="price" />
+      </label>
+    </div>
+
+    <label>URL de portada
+      <input formControlName="cover_url" placeholder="https://..." />
+    </label>
+
+    <button [disabled]="saving() || form.invalid">
+      {{ saving() ? 'Creando…' : 'Crear producto' }}
+    </button>
+  </form>
+</section>

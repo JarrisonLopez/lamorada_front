@@ -1,7 +1,7 @@
 import { Component, PLATFORM_ID, signal, inject, computed } from '@angular/core';
 import { CommonModule, DatePipe, isPlatformBrowser } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { finalize, firstValueFrom } from 'rxjs';
+import { finalize } from 'rxjs';
 
 import { PodcastService } from '../../services/podcast.service';
 import { UserService } from '../../services/user.service';
@@ -13,7 +13,6 @@ type Podcast = {
   title: string;
   description?: string;
   youtubeId: string;
-  creator_id?: string;
   creator_name: string;
   createdAt?: string | Date;
 };
@@ -73,9 +72,6 @@ export class PodcastComponent {
     return list;
   });
 
-  /** id del usuario autenticado para comprobar autoría */
-  meId: string | null = null;
-
   form: FormGroup = this.fb.group({
     title: ['', [Validators.required, Validators.maxLength(160)]],
     description: ['', [Validators.maxLength(500)]],
@@ -87,29 +83,21 @@ export class PodcastComponent {
   }
 
   async ngOnInit() {
-    await this.resolveIdentityAndRole();
+    this.resolveRole();
     this.fetch();
   }
 
-  private async resolveIdentityAndRole() {
+  /** Solo usamos el JWT para saber si es psicólogo (no hay eliminar) */
+  private resolveRole() {
     if (!this.isBrowser) return;
     try {
       const t = this.userSvc.getToken();
       if (t) {
         const p: any = decodeJwt(t);
         const role = p?.role || p?.user?.role;
-        const id = p?.id || p?._id || p?.user?._id || p?.user?.id;
         if (role === 'psychologist') this.isPsych.set(true);
-        if (id) this.meId = String(id);
       }
-    } catch {}
-    if (!this.meId || !this.isPsych()) {
-      try {
-        const me = await firstValueFrom(this.userSvc.getMe());
-        if (me?._id) this.meId = String(me._id);
-        if (me?.role === 'psychologist') this.isPsych.set(true);
-      } catch {}
-    }
+    } catch { /* noop */ }
   }
 
   fetch() {
@@ -151,11 +139,6 @@ export class PodcastComponent {
     }
   }
 
-  isOwner(p: Podcast): boolean {
-    const ownerId = p?.creator_id ? String(p.creator_id) : null;
-    return !!(this.meId && ownerId && ownerId === this.meId);
-  }
-
   create() {
     if (!this.isBrowser) return;
     if (this.form.invalid) {
@@ -185,31 +168,6 @@ export class PodcastComponent {
           else if (e?.status === 403) this.err.set('No tienes permisos para esta acción.');
           else if (e?.status === 404) this.err.set('Endpoint de creación no encontrado.');
           else this.err.set(e?.error?.message || 'No se pudo crear el podcast.');
-        },
-      });
-  }
-
-  remove(p: Podcast) {
-    if (!this.isOwner(p)) return;
-    if (!confirm(`¿Eliminar el podcast "${p.title}"?`)) return;
-
-    this.loading.set(true);
-    this.err.set(null);
-    this.msg.set(null);
-
-    this.svc
-      .deletePodcast(p._id)
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe({
-        next: () => {
-          this.msg.set('Podcast eliminado.');
-          this.fetch();
-        },
-        error: (e) => {
-          if (e?.status === 401) this.err.set('No autenticado.');
-          else if (e?.status === 403)
-            this.err.set('No autorizado: solo el autor puede eliminarlo.');
-          else this.err.set(e?.error?.message || 'No se pudo eliminar el podcast.');
         },
       });
   }

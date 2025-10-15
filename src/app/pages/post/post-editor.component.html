@@ -1,0 +1,45 @@
+<section class="page">
+  <h2>Editor de publicaciones</h2>
+  <p class="hint">Crea nuevas entradas para el blog. Solo para psicólogos.</p>
+
+  <p *ngIf="err()" class="banner err" aria-live="assertive">{{ err() }}</p>
+  <p *ngIf="msg()" class="banner ok" aria-live="polite">{{ msg() }}</p>
+
+  <form [formGroup]="form" (ngSubmit)="create()" class="form" novalidate>
+    <label>Título
+      <input formControlName="title" placeholder="Ej: Técnicas de respiración" />
+    </label>
+
+    <label>Contenido
+      <textarea rows="6" formControlName="content" placeholder="Escribe tu contenido…"></textarea>
+    </label>
+
+    <label class="row">
+      <input type="checkbox" formControlName="active" />
+      <span>Publicar (visible)</span>
+    </label>
+
+    <button [disabled]="saving() || form.invalid">
+      {{ saving() ? 'Creando…' : 'Crear publicación' }}
+    </button>
+  </form>
+
+  <h3>Mis publicaciones</h3>
+  <div class="list" *ngIf="!loading() && myPosts().length; else emptyOrLoading">
+    <article class="item" *ngFor="let p of myPosts()">
+      <div class="meta">
+        <strong>{{ p.title }}</strong>
+        <span *ngIf="p.created_at"> · {{ p.created_at | date:'dd/MM/yy, HH:mm' }}</span>
+        <span class="badge" [class.off]="p.active === false">{{ p.active === false ? 'Oculta' : 'Activa' }}</span>
+      </div>
+      <div class="actions">
+        <button class="danger" (click)="remove(p)">Eliminar</button>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #emptyOrLoading>
+    <div *ngIf="loading()">Cargando…</div>
+    <div *ngIf="!loading()">Aún no tienes publicaciones.</div>
+  </ng-template>
+</section>

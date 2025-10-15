@@ -1,0 +1,17 @@
+.page { max-width: 720px; margin: 18px auto; padding: 0 16px; color:#2a173d; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial; }
+.hint { color:#6d5b8a; }
+
+.banner { margin:10px 0; padding:10px 12px; border-radius:12px; border:1px solid #e6dcff; font-size:13px; }
+.banner.ok { background:#f0fffb; color:#1d7a62; border-color:#b6f1e3; }
+.banner.err { background:#fff0f5; color:#9b2d57; border-color:#f7c4d9; }
+
+.form { display:grid; gap:12px; margin-top:12px; }
+.form input { width:100%; padding:12px 14px; border-radius:12px; border:1px solid #e6dcff; outline:0; background:#fff; }
+.form input:focus { border-color:#8f6bff; box-shadow:0 0 0 2px rgba(143,107,255,.18); }
+.row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+button {
+  width: fit-content; padding:10px 14px; border-radius:12px; border:1px solid #e6dcff;
+  font-weight:800; color:#fff; background:linear-gradient(180deg,#b096ff,#9b7bff 60%,#8f6bff);
+  box-shadow:0 10px 26px rgba(143,107,255,.28); cursor:pointer;
+}
+button:disabled { opacity:.65; cursor:not-allowed; box-shadow:none; }
