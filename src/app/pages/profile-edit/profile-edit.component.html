@@ -1,69 +1,99 @@
 <section class="wrap">
   <h2>Editar mi perfil</h2>
+  <p class="subtitle">
+    Actualiza tus datos personales. Los campos marcados como obligatorios deben completarse para
+    guardar.
+  </p>
 
   @if (loading) {
-    <p>Cargando…</p>
+  <div class="card muted">Cargando…</div>
+  } @else { @if (missingDoc) {
+  <div class="card warn" style="margin-bottom: 16px">
+    <p>
+      Aún no existe tu ficha (perfil) en el servidor. Tu JWT trae algunos datos (por ejemplo, nombre
+      y rol), pero para crear la ficha completa debes pasar por
+      <strong>registro</strong>, porque el backend exige campos como: <code>document_type</code>,
+      <code>last_name1</code>, <code>last_name2</code>, <code>age</code>, <code>phone</code> y
+      <code>password</code>.
+    </p>
+    <div class="row">
+      <button type="button" class="btn primary" (click)="createNow()">Crear ficha ahora</button>
+      <button type="button" class="link" (click)="fetch()">Reintentar cargar</button>
+    </div>
+  </div>
   } @else {
-    @if (missingDoc) {
-      <div class="card warn">
-        <p>
-          Aún no existe tu ficha (perfil) en el servidor. Tu JWT trae algunos datos
-          (por ejemplo, nombre y rol), pero para crear la ficha completa debes pasar por
-          <strong>registro</strong>, porque el backend exige campos como:
-          <code>document_type</code>, <code>last_name1</code>, <code>last_name2</code>,
-          <code>age</code>, <code>phone</code> y <code>password</code>.
-        </p>
-        <div class="row">
-          <button type="button" class="btn" (click)="createNow()">Crear ficha ahora</button>
-          <button type="button" class="link" (click)="fetch()">Reintentar cargar</button>
-        </div>
+  <form [formGroup]="form" class="form" (ngSubmit)="submit()">
+    <div class="card" style="margin-bottom: 16px">
+      <div class="grid">
+        <label
+          >Nombre
+          <input type="text" formControlName="name" placeholder="Tu nombre" />
+        </label>
+
+        <label
+          >Email
+          <input type="email" formControlName="email" placeholder="tu@correo.com" />
+        </label>
+
+        <label
+          >Teléfono
+          <input type="tel" formControlName="phone" placeholder="+57 300 000 0000" />
+        </label>
+
+        <label
+          >Edad
+          <input type="number" formControlName="age" min="0" placeholder="Ej. 28" />
+        </label>
+
+        @if (role === 'psychologist') {
+        <label
+          >Especialidad
+          <input
+            type="text"
+            formControlName="specialty"
+            placeholder="Terapia familiar, TCC, etc."
+          />
+        </label>
+        }
       </div>
-    } @else {
-      <form [formGroup]="form" class="form" (ngSubmit)="submit()">
-        <div class="grid">
-          <label>Nombre
-            <input type="text" formControlName="name" />
-          </label>
+    </div>
 
-          <label>Email
-            <input type="email" formControlName="email" />
-          </label>
+    <div class="card">
+      <h3 style="margin: 0 0 6px">Contraseña requerida para guardar</h3>
+      <p class="hint">
+        El servidor exige enviar una contraseña válida en cada actualización.
+        <strong>Puedes usar la misma que ya tienes</strong> (escríbela en ambos campos).
+      </p>
 
-          <label>Teléfono
-            <input type="tel" formControlName="phone" />
-          </label>
+      <div class="grid">
+        <label
+          >Nueva contraseña (o la actual)
+          <input
+            type="password"
+            formControlName="password"
+            placeholder="Obligatoria para guardar"
+          />
+        </label>
 
-          <label>Edad
-            <input type="number" formControlName="age" min="0" />
-          </label>
+        <label
+          >Repetir contraseña
+          <input
+            type="password"
+            formControlName="rePassword"
+            placeholder="Obligatoria para guardar"
+          />
+        </label>
+      </div>
 
-          @if (role === 'psychologist') {
-            <label>Especialidad
-              <input type="text" formControlName="specialty" />
-            </label>
-          }
-        </div>
+      <p class="hint">
+        Debe tener mínimo 8 caracteres, con mayúscula, minúscula, dígito y símbolo.
+      </p>
 
-        <h3>Contraseña requerida para guardar</h3>
-        <p class="hint">
-          El servidor exige enviar una contraseña válida en cada actualización.
-          <strong>Puedes usar la misma que ya tienes</strong> (escríbela en ambos campos).
-        </p>
-        <div class="grid">
-          <label>Nueva contraseña (o la actual)
-            <input type="password" formControlName="password" placeholder="Obligatoria para guardar" />
-          </label>
-          <label>Repetir contraseña
-            <input type="password" formControlName="rePassword" placeholder="Obligatoria para guardar" />
-          </label>
-        </div>
-        <p class="hint">Debe tener mínimo 8 caracteres, con mayúscula, minúscula, dígito y símbolo.</p>
-
-        <div class="row actions">
-          <button type="submit" class="btn primary" [disabled]="saving">Guardar</button>
-          <button type="button" class="link" (click)="fetch()" [disabled]="saving">Reintentar</button>
-        </div>
-      </form>
-    }
-  }
+      <div class="row actions">
+        <button type="submit" class="btn primary" [disabled]="saving">Guardar</button>
+        <button type="button" class="link" (click)="fetch()" [disabled]="saving">Reintentar</button>
+      </div>
+    </div>
+  </form>
+  } }
 </section>

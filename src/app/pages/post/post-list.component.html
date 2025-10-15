@@ -1,27 +1,71 @@
-<h2>Publicaciones</h2>
+<section class="wrap">
+  <header class="hero">
+    <div class="hero-left">
+      <h2>Publicaciones</h2>
+      <p class="hint">Ideas, guías y reflexiones de nuestros psicólogos.</p>
+    </div>
 
-<div *ngIf="loading">Cargando publicaciones…</div>
-<p *ngIf="err" class="err">{{ err }}</p>
+    <div class="hero-right">
+      <div class="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79L20 20.5 21.5 19l-6-5zM10 14.5a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"
+          />
+        </svg>
+        <input
+          type="search"
+          [value]="q"
+          (input)="q = $any($event.target).value"
+          placeholder="Buscar por título, autor o contenido…"
+          aria-label="Buscar publicaciones"
+        />
+      </div>
+      <span class="count" *ngIf="!loading">{{ filtered.length }} resultados</span>
+    </div>
+  </header>
 
-<section *ngIf="!loading && posts.length">
-  <article class="post" *ngFor="let p of posts">
-    <h3>{{ p.title }}</h3>
-    <p class="meta">
-      <span *ngIf="authorName(p)">por {{ authorName(p) }}</span>
-      <span *ngIf="p.created_at"> • {{ p.created_at | date : 'medium' }}</span>
-      <span *ngIf="p.active === false" class="inactive"> • inactiva</span>
-    </p>
-    <p class="content">{{ p.content }}</p>
-  </article>
+  <div *ngIf="loading" class="card muted">Cargando publicaciones…</div>
+  <p *ngIf="err" class="banner err" aria-live="assertive">{{ err }}</p>
+
+  <section *ngIf="!loading && filtered.length; else emptyTpl" class="gallery">
+    <article class="card post" *ngFor="let p of filtered">
+      <div class="post-head">
+        <div class="avatar" [attr.aria-label]="authorName(p) || 'Autor'">
+          {{ authorInitials(p) }}
+        </div>
+
+        <div class="titlebox">
+          <h3 class="title" [class.inactive]="isInactive(p)">{{ p.title }}</h3>
+          <p class="meta">
+            <span *ngIf="authorName(p)">por {{ authorName(p) }}</span>
+            <span *ngIf="p.created_at"> · {{ p.created_at | date : 'dd/MM/yy, HH:mm' }} </span>
+          </p>
+        </div>
+
+        <span class="pill" [class.off]="isInactive(p)" [class.on]="!isInactive(p)">{{
+          isInactive(p) ? 'Oculta' : 'Activa'
+        }}</span>
+      </div>
+
+      <p class="excerpt">
+        {{ excerpt(220, p.content) }}
+      </p>
+
+      <div class="post-foot">
+        <button class="ghost">Leer más</button>
+        <div class="spark"></div>
+      </div>
+    </article>
+  </section>
+
+  <ng-template #emptyTpl>
+    <div class="empty">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm1 3v9h14V8l-7 4-7-4Zm7 2 7-4H5l7 4Z"
+        />
+      </svg>
+      <p>No hay publicaciones para mostrar.</p>
+    </div>
+  </ng-template>
 </section>
-
-<div *ngIf="!loading && !posts.length">No hay publicaciones.</div>
-
-<style>
-  .err { color: #c00; margin: 8px 0; }
-  .post { padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px; margin: 10px 0; background: #fff; }
-  .post h3 { margin: 0 0 6px; }
-  .meta { color: #6b7280; font-size: 12px; margin: 0 0 6px; }
-  .inactive { color: #b91c1c; }
-  .content { white-space: pre-line; }
-</style>

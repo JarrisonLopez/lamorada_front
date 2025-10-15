@@ -1,4 +1,4 @@
-<footer class="site-footer" role="contentinfo">
+<footer #root class="site-footer" role="contentinfo">
   <div class="container">
     <!-- Marca -->
     <a class="brand" routerLink="/home" aria-label="Ir al inicio">
@@ -36,6 +36,7 @@
           />
         </svg>
       </a>
+
       <a
         href="https://twitter.com"
         target="_blank"
@@ -49,6 +50,7 @@
           />
         </svg>
       </a>
+
       <a href="mailto:hola@lamorada.com" aria-label="Correo" class="icon">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path
@@ -60,10 +62,10 @@
 
     <!-- Línea legal -->
     <div class="legal">
-      <small
-        >© {{ year }} LaMorada · <a routerLink="/privacy">Privacidad</a> ·
-        <a routerLink="/terms">Términos</a></small
-      >
+      <small>
+        © {{ year }} LaMorada · <a routerLink="/privacy">Privacidad</a> ·
+        <a routerLink="/terms">Términos</a>
+      </small>
     </div>
   </div>
 </footer>

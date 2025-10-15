@@ -1,12 +1,19 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators, FormGroup, FormControl } from '@angular/forms';
+import {
+  FormBuilder,
+  ReactiveFormsModule,
+  Validators,
+  FormGroup,
+  FormControl,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { UserService } from '../../services/user.service';
 
 type Role = 'patient' | 'psychologist' | 'unknown';
+
 type MeForm = FormGroup<{
   name: FormControl<string>;
   email: FormControl<string>;
@@ -27,7 +34,7 @@ type MeForm = FormGroup<{
 export class ProfileEditComponent {
   form!: MeForm;
   loading = true;
-  saving  = false;
+  saving = false;
 
   role: Role = 'unknown';
   hasIdentity = false;
@@ -39,31 +46,37 @@ export class ProfileEditComponent {
     return typeof window !== 'undefined' && typeof document !== 'undefined';
   }
 
-  constructor(
-    private fb: FormBuilder,
-    private userSrv: UserService,
-    private router: Router,
-  ) {
+  constructor(private fb: FormBuilder, private userSrv: UserService, private router: Router) {
     this.form = this.fb.group({
-      name: this.fb.control<string>('', { nonNullable: true, validators: [Validators.required, Validators.minLength(2)] }),
-      email: this.fb.control<string>('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
+      name: this.fb.control<string>('', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.minLength(2)],
+      }),
+      email: this.fb.control<string>('', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.email],
+      }),
       phone: this.fb.control<string>('', { nonNullable: true }),
       age: this.fb.control<number | null>(null),
       specialty: this.fb.control<string | null>(null),
-      password: this.fb.control<string | null>(null, { validators: [] }),
-      rePassword: this.fb.control<string | null>(null, { validators: [] }),
+      password: this.fb.control<string | null>(null),
+      rePassword: this.fb.control<string | null>(null),
     });
   }
 
-  ngOnInit() { this.fetch(); }
-  ngOnDestroy() { this.sub?.unsubscribe(); }
+  ngOnInit() {
+    this.fetch();
+  }
+  ngOnDestroy() {
+    this.sub?.unsubscribe();
+  }
 
   private safeOff() {
     this.loading = false;
     if (this.isBrowser) setTimeout(() => (this.loading = false), 0);
   }
 
-  /** Reglas de contraseña (puede ser la misma que ya usas) */
+  /** Validación simple de contraseña (puede ser la misma que ya usas) */
   private validatePasswordPair(): string | null {
     const p = (this.form.controls.password.value ?? '').trim();
     const r = (this.form.controls.rePassword.value ?? '').trim();
@@ -84,12 +97,13 @@ export class ProfileEditComponent {
     return null;
   }
 
+  /** Carga inicial: token + best effort con /me */
   public fetch() {
     this.sub?.unsubscribe();
 
-    // 1) Prellenar desde token
+    // 1) Pre-llenar desde el token
     const t = this.userSrv.profileFromToken(this.userSrv.getToken());
-    this.role = (t.role === 'patient' || t.role === 'psychologist') ? (t.role as Role) : 'unknown';
+    this.role = t.role === 'patient' || t.role === 'psychologist' ? (t.role as Role) : 'unknown';
     this.hasIdentity = !!t.id;
     this.missingDoc = !this.hasIdentity;
 
@@ -97,15 +111,19 @@ export class ProfileEditComponent {
       name: String(t.name ?? ''),
       email: String(t.email ?? ''),
       phone: String(t.phone ?? ''),
-      age: (t.age != null ? Number(t.age) : null),
-      specialty: (t.specialty ?? null),
+      age: t.age != null ? Number(t.age) : null,
+      specialty: t.specialty ?? null,
     });
 
-    if (!this.isBrowser) { this.safeOff(); return; }
+    if (!this.isBrowser) {
+      this.safeOff();
+      return;
+    }
 
-    // 2) Completar best-effort
+    // 2) Completar con el backend
     this.loading = true;
-    this.sub = this.userSrv.getMe()
+    this.sub = this.userSrv
+      .getMe()
       .pipe(finalize(() => this.safeOff()))
       .subscribe({
         next: (me) => {
@@ -114,8 +132,8 @@ export class ProfileEditComponent {
               name: String(me?.name ?? this.form.controls.name.value ?? ''),
               email: String(me?.email ?? this.form.controls.email.value ?? ''),
               phone: String(me?.phone ?? this.form.controls.phone.value ?? ''),
-              age: (me?.age != null ? Number(me?.age) : this.form.controls.age.value),
-              specialty: (me?.specialty ?? me?.speciality ?? this.form.controls.specialty.value),
+              age: me?.age != null ? Number(me?.age) : this.form.controls.age.value,
+              specialty: me?.specialty ?? me?.speciality ?? this.form.controls.specialty.value,
             });
             if (me?._id) {
               this.hasIdentity = true;
@@ -123,7 +141,7 @@ export class ProfileEditComponent {
             }
           }
         },
-        error: () => {}
+        error: () => {},
       });
   }
 
@@ -136,11 +154,20 @@ export class ProfileEditComponent {
   }
 
   submit() {
-    if (!this.hasIdentity) { this.router.navigateByUrl('/sign-up'); return; }
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (!this.hasIdentity) {
+      this.router.navigateByUrl('/sign-up');
+      return;
+    }
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
     const pErr = this.validatePasswordPair();
-    if (pErr) { alert(pErr); return; }
+    if (pErr) {
+      alert(pErr);
+      return;
+    }
 
     const raw = this.form.getRawValue();
     const data: any = {
@@ -155,8 +182,9 @@ export class ProfileEditComponent {
     data.rePassword = (raw.rePassword ?? '').trim();
 
     this.saving = true;
-    this.userSrv.updateMeCompat(data)
-      .pipe(finalize(() => this.saving = false))
+    this.userSrv
+      .updateMeCompat(data)
+      .pipe(finalize(() => (this.saving = false)))
       .subscribe({
         next: (res) => {
           if (res?.error === 'NO_ID_IN_TOKEN') {
@@ -169,7 +197,7 @@ export class ProfileEditComponent {
         error: (err) => {
           const msg = (err?.error?.message || err?.message || '').toString();
           alert(msg || 'No se pudo actualizar el perfil.');
-        }
+        },
       });
   }
 }

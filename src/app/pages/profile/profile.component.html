@@ -1,11 +1,14 @@
 <section class="wrap">
   <h2>Perfiles de psicólogos</h2>
+  <p class="subtitle">Buscar por nombre, email o especialidad</p>
 
+  <!-- Toolbar -->
   <div class="toolbar">
     <input
       type="search"
-      placeholder="Buscar por nombre, email o especialidad…"
-      [formControl]="filterCtrl" />
+      placeholder="Ej. Ana, terapia familiar, nombre@dominio…"
+      [formControl]="filterCtrl"
+    />
     <button type="button" class="link" (click)="fetch()">Recargar</button>
   </div>
 
@@ -16,31 +19,52 @@
   <ng-template #content>
     <div *ngIf="errorMsg" class="card error">
       {{ errorMsg }}
-      <div class="mt-6">
-        <button type="button" (click)="fetch()">Reintentar</button>
+      <div class="actions">
+        <button type="button" class="badge-btn" (click)="fetch()">Reintentar</button>
       </div>
     </div>
 
-    <div *ngIf="!errorMsg && !view.length" class="card muted">
-      No hay psicólogos para mostrar.
-    </div>
+    <div *ngIf="!errorMsg && !view.length" class="card muted">No hay psicólogos para mostrar.</div>
 
     <div *ngIf="!errorMsg && view.length" class="grid">
       <article class="psy" *ngFor="let p of view">
         <div class="avatar">{{ initials(p) }}</div>
+
         <div class="info">
           <h3>{{ p.fullName }}</h3>
-          <div class="row">
-            <span class="label">Email:</span>
-            <a class="value" [href]="'mailto:' + p.email">{{ p.email || '—' }}</a>
+
+          <div class="rows">
+            <div class="label">Email:</div>
+            <div class="value">
+              <a [href]="'mailto:' + p.email">{{ p.email || '—' }}</a>
+            </div>
+
+            <div class="label">Especialidad:</div>
+            <div class="value">
+              <ng-container *ngIf="p.specialty; else noSpec">
+                {{ p.specialty }}
+              </ng-container>
+              <ng-template #noSpec>
+                <span class="pill">Sin especialidad</span>
+              </ng-template>
+            </div>
+
+            <div class="label">Teléfono:</div>
+            <div class="value">
+              <ng-container *ngIf="p.phone; else noPhone">
+                {{ p.phone }}
+              </ng-container>
+              <ng-template #noPhone>
+                <span class="pill">Sin teléfono</span>
+              </ng-template>
+            </div>
           </div>
-          <div class="row">
-            <span class="label">Especialidad:</span>
-            <span class="value">{{ p.specialty || '—' }}</span>
-          </div>
-          <div class="row">
-            <span class="label">Teléfono:</span>
-            <span class="value">{{ p.phone || '—' }}</span>
+
+          <div class="actions">
+            <button type="button" class="badge-btn" (click)="copyToClipboard(p.email)">
+              Copiar
+            </button>
+            <a class="badge-btn" [href]="'mailto:' + p.email">Email</a>
           </div>
         </div>
       </article>
